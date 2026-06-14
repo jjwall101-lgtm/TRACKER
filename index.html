@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>FocusOS ADHD Companion V1.5</title>
+<title>FocusOS ADHD Companion V1.5.1</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <meta name="theme-color" content="#151210">
@@ -352,6 +352,75 @@ if($('fullReportBtn'))$('fullReportBtn').onclick=()=>html('report',fullReport())
 if($('doseReportBtn'))$('doseReportBtn').onclick=()=>html('report',doseComparisonReport());
 if($('saveReportBtn'))$('saveReportBtn').onclick=saveClinicianReport; if($('saveTitrationBtn'))$('saveTitrationBtn').onclick=saveTitration;$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-focus-os-backup.json';a.click()};$('exportJsonBtn').onclick=$('exportBtn').onclick;$('saveSettingsBtn').onclick=()=>{db.settings.theme=s('theme');localStorage.setItem(KEY,JSON.stringify(db));location.reload()};$('clearDraftBtn').onclick=()=>{if(confirm('Clear current unsaved draft?')){clearFormState();location.reload()}};$('clearBtn').onclick=()=>{if(confirm('Clear all data?')){localStorage.removeItem(KEY);clearFormState();location.reload()}};render()}
 init();
+
+/* V1.5.1 button safety patch */
+(function(){
+  function q(id){return document.getElementById(id)}
+  function saveStore(){
+    try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){}
+  }
+  function applyThemeNow(){
+    if(!db.settings) db.settings={theme:'light'};
+    document.body.classList.remove('dark','amoled');
+    if(db.settings.theme==='dark') document.body.classList.add('dark');
+    if(db.settings.theme==='amoled') document.body.classList.add('amoled');
+  }
+  function wireButtons(){
+    if(q('saveSettingsBtn')){
+      q('saveSettingsBtn').onclick=function(){
+        if(!db.settings) db.settings={};
+        db.settings.theme = q('theme') ? q('theme').value : 'light';
+        saveStore();
+        applyThemeNow();
+        alert('Settings saved');
+      };
+    }
+    if(q('theme')){
+      q('theme').onchange=function(){
+        if(!db.settings) db.settings={};
+        db.settings.theme = q('theme').value;
+        applyThemeNow();
+      };
+    }
+    if(q('exportBtn')){
+      q('exportBtn').onclick=function(){
+        var blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+        var a=document.createElement('a');
+        a.href=URL.createObjectURL(blob);
+        a.download='focusos-backup.json';
+        a.click();
+      };
+    }
+    if(q('exportJsonBtn')){
+      q('exportJsonBtn').onclick=q('exportBtn').onclick;
+    }
+    if(q('clearBtn')){
+      q('clearBtn').onclick=function(){
+        if(confirm('Clear all data?')){
+          localStorage.removeItem(KEY);
+          try{localStorage.removeItem(FORMKEY);}catch(e){}
+          location.reload();
+        }
+      };
+    }
+    if(q('clearDraftBtn')){
+      q('clearDraftBtn').onclick=function(){
+        if(confirm('Clear current draft only?')){
+          try{localStorage.removeItem(FORMKEY);}catch(e){}
+          location.reload();
+        }
+      };
+    }
+    if(q('quickReportBtn') && typeof quickReport==='function') q('quickReportBtn').onclick=function(){q('report').textContent=quickReport()};
+    if(q('fullReportBtn') && typeof fullReport==='function') q('fullReportBtn').onclick=function(){q('report').textContent=fullReport()};
+    if(q('doseReportBtn') && typeof doseComparisonReport==='function') q('doseReportBtn').onclick=function(){q('report').textContent=doseComparisonReport()};
+    if(q('saveReportBtn') && typeof saveClinicianReport==='function') q('saveReportBtn').onclick=saveClinicianReport;
+    if(q('reportBtn') && typeof report==='function') q('reportBtn').onclick=function(){q('report').textContent=report()};
+  }
+  wireButtons();
+  setTimeout(wireButtons,100);
+})();
+
 </script>
 </body>
 </html>
