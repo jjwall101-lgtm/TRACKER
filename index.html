@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ADHD Focus OS</title>
+<title>ADHD Focus OS V1.1</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <meta name="theme-color" content="#151210">
@@ -38,7 +38,7 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px
 </section>
 
 <nav class="tabs" id="tabs">
- <button class="active" data-page="home">Home</button><button data-page="log">Log</button><button data-page="meds">Meds</button><button data-page="focus">Focus</button><button data-page="sleep">Sleep</button><button data-page="journal">Journal</button><button data-page="insights">Insights</button><button data-page="settings">Settings</button>
+ <button class="active" data-page="home">Home</button><button data-page="log">Log</button><button data-page="meds">Meds</button><button data-page="titration">Titration</button><button data-page="focus">Focus</button><button data-page="sleep">Sleep</button><button data-page="journal">Journal</button><button data-page="insights">Insights</button><button data-page="settings">Settings</button>
 </nav>
 
 <div id="page-home" class="page active">
@@ -73,6 +73,23 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px
  </div>
 </div>
 
+
+<div id="page-titration" class="page">
+ <div class="card">
+  <h2>Titration timeline</h2>
+  <p class="muted">Add dose changes here. They will appear in the clinician report with dates.</p>
+  <div class="grid two">
+   <label>Medication <input id="titMed" placeholder="Elvanse"></label>
+   <label>Dose <input id="titDose" placeholder="50mg"></label>
+   <label>Start date <input id="titStart" type="date"></label>
+   <label>End date <input id="titEnd" type="date"></label>
+  </div>
+  <label>Notes <textarea id="titNotes" placeholder="How it felt, crashes, side effects, review notes..."></textarea></label>
+  <button id="saveTitrationBtn" type="button">Save Titration Phase</button>
+  <div id="titrationList"></div>
+ </div>
+</div>
+
 <div id="page-focus" class="page">
  <div class="card"><h2>Focus readiness</h2><div class="grid two"><div class="mini"><b id="focusReady">--</b><span>Readiness</span></div><div class="mini"><b id="bestWindow">--</b><span>Best work window</span></div></div><div id="focusExplain" class="explain"></div></div>
  <div class="card"><h2>Hyperfocus / distraction</h2><div class="grid two"><label>Activity <input id="hyperActivity" placeholder="Phone, work, gaming..."></label><label>Minutes <input id="hyperMinutes" type="number"></label><label>Type<select id="hyperType"><option>Productive</option><option>Non-productive</option><option>Mixed</option></select></label></div></div>
@@ -99,7 +116,7 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px
 <script>
 const $=id=>document.getElementById(id);
 const KEY='adhdFocusOSv1';
-let db=JSON.parse(localStorage.getItem(KEY)||'{"entries":[],"settings":{"theme":"light"}}');
+let db=JSON.parse(localStorage.getItem(KEY)||'{"entries":[],"titration":[],"settings":{"theme":"light"}}'); if(!db.titration)db.titration=[];
 let vals={focus:5,initiation:5,switching:5,noise:5,impulsivity:5,regulation:5,mood:5,motivation:5,anxiety:5,irritability:5};
 const adhd=[['focus','Focus',25,false],['initiation','Task initiation',20,false],['switching','Task switching',15,false],['regulation','Emotional regulation',15,false],['noise','Mental noise',15,true],['impulsivity','Impulsivity',10,true]];
 const mood=[['mood','Mood'],['motivation','Motivation'],['anxiety','Anxiety'],['irritability','Irritability']];
@@ -122,11 +139,45 @@ html('sleepExplain','<b>Sleep score '+e.sleep.score+'/100</b>Duration up to 50 p
 html('focusExplain','<b>Focus readiness</b>Uses executive function, medication score, sleep score and mood. This is for work capacity, not diagnosis.');
 html('plan',plan(e).map(x=>'<div class="insight">'+x+'</div>').join(''));
 html('history',db.entries.slice(-5).reverse().map(x=>'<div class="entry"><b>'+new Date(x.date).toLocaleString('en-GB')+' · '+x.daily+'/100</b>ADHD '+x.adhd.score+' · Med '+x.med.score+' · Sleep '+x.sleep.score+'</div>').join('')||'<p class="muted">No entries yet.</p>');
-html('insights',patterns());}
+html('insights',patterns());renderTitration();}
 function patterns(){if(db.entries.length<3)return'<div class="insight">Save at least 3 entries to start seeing patterns.</div>';let crash=db.entries.filter(e=>e.crashTime);let out=[];if(crash.length)out.push('Average crash severity: '+avg(crash.map(e=>e.crashSeverity)).toFixed(1)+'/10');out.push('Average ADHD score: '+avg(db.entries.map(e=>e.adhd.score)).toFixed(1)+'/100');return out.map(x=>'<div class="insight">'+x+'</div>').join('')}
-function report(){let es=db.entries;return 'ADHD FOCUS OS REPORT\\n\\nEntries: '+es.length+'\\nAverage ADHD: '+(es.length?avg(es.map(e=>e.adhd.score)).toFixed(1):'--')+'\\nAverage Medication: '+(es.length?avg(es.map(e=>e.med.score)).toFixed(1):'--')+'\\nAverage Sleep: '+(es.length?avg(es.map(e=>e.sleep.score)).toFixed(1):'--')+'\\n\\nRecent notes included in saved entries.'}
+
+function renderTitration(){
+  if(!db.titration) db.titration=[];
+  html('titrationList', db.titration.slice().reverse().map((t,i)=>{
+    let end=t.end?t.end:'ongoing';
+    return '<div class="entry"><b>'+t.med+' '+t.dose+'</b>'+t.start+' to '+end+'<br>'+(t.notes||'')+'</div>';
+  }).join('') || '<p class="muted">No titration phases saved yet.</p>');
+}
+function saveTitration(){
+  if(!db.titration) db.titration=[];
+  let med=s('titMed') || s('medName') || 'Medication';
+  let dose=s('titDose') || s('dose') || '';
+  let start=s('titStart') || new Date().toISOString().slice(0,10);
+  db.titration.push({med,dose,start,end:s('titEnd'),notes:s('titNotes')});
+  save();
+  alert('Titration phase saved');
+}
+function titrationReport(){
+  if(!db.titration || !db.titration.length) return 'No titration phases logged.';
+  return db.titration.map(t=>{
+    let end=t.end?t.end:'ongoing';
+    let startDate=new Date(t.start);
+    let endDate=t.end?new Date(t.end):new Date();
+    let related=db.entries.filter(e=>{
+      let d=new Date(e.date);
+      return d>=startDate && d<=endDate;
+    });
+    let summary=related.length
+      ? ' · entries '+related.length+', avg ADHD '+avg(related.map(e=>e.adhd.score)).toFixed(1)+'/100, avg med '+avg(related.map(e=>e.med.score)).toFixed(1)+'%'
+      : ' · no daily entries in this phase yet';
+    return '- '+t.start+' to '+end+': '+t.med+' '+t.dose+summary+(t.notes?' · notes: '+t.notes:'');
+  }).join('\\n');
+}
+
+function report(){let es=db.entries;return 'ADHD FOCUS OS REPORT\\n\\nEntries: '+es.length+'\\nAverage ADHD: '+(es.length?avg(es.map(e=>e.adhd.score)).toFixed(1):'--')+'\\nAverage Medication: '+(es.length?avg(es.map(e=>e.med.score)).toFixed(1):'--')+'\\nAverage Sleep: '+(es.length?avg(es.map(e=>e.sleep.score)).toFixed(1):'--')+'\\n\\nTITRATION TIMELINE\\n'+titrationReport()+'\\n\\nRecent notes included in saved entries.'}
 function show(page){document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$('page-'+page).classList.add('active');scrollTo(0,0)}
-function init(){set('todayTitle',new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}));sliders(adhd,'adhdSliders');sliders(mood,'moodSliders');if(db.settings.theme)document.body.classList.add(db.settings.theme);document.querySelectorAll('input,select,textarea').forEach(el=>{el.addEventListener('input',render);el.addEventListener('change',render)});$('tabs').onclick=e=>{let b=e.target.closest('[data-page]');if(b)show(b.dataset.page)};$('saveBtn').onclick=()=>{db.entries.push(current());save();alert('Entry saved')};$('reportBtn').onclick=()=>html('report',report());$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-focus-os-backup.json';a.click()};$('exportJsonBtn').onclick=$('exportBtn').onclick;$('saveSettingsBtn').onclick=()=>{db.settings.theme=s('theme');localStorage.setItem(KEY,JSON.stringify(db));location.reload()};$('clearBtn').onclick=()=>{if(confirm('Clear all data?')){localStorage.removeItem(KEY);location.reload()}};render()}
+function init(){set('todayTitle',new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}));sliders(adhd,'adhdSliders');sliders(mood,'moodSliders');if(db.settings.theme)document.body.classList.add(db.settings.theme);document.querySelectorAll('input,select,textarea').forEach(el=>{el.addEventListener('input',render);el.addEventListener('change',render)});$('tabs').onclick=e=>{let b=e.target.closest('[data-page]');if(b)show(b.dataset.page)};$('saveBtn').onclick=()=>{db.entries.push(current());save();alert('Entry saved')}; if($('saveTitrationBtn'))$('saveTitrationBtn').onclick=saveTitration;$('reportBtn').onclick=()=>html('report',report());$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-focus-os-backup.json';a.click()};$('exportJsonBtn').onclick=$('exportBtn').onclick;$('saveSettingsBtn').onclick=()=>{db.settings.theme=s('theme');localStorage.setItem(KEY,JSON.stringify(db));location.reload()};$('clearBtn').onclick=()=>{if(confirm('Clear all data?')){localStorage.removeItem(KEY);location.reload()}};render()}
 init();
 </script>
 </body>
