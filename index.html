@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>FocusOS ADHD Companion V1.5.4</title>
+<title>FocusOS ADHD Companion V1.6</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <meta name="theme-color" content="#151210">
@@ -61,7 +61,7 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px
   <h2>Medication tracking</h2>
   <div class="grid two">
    <label>Medication <input id="medName" placeholder="Elvanse"></label><label>Dose <input id="dose" placeholder="50mg"></label>
-   <label>Time taken <input id="medTime" type="time"></label><label>Missed dose?<select id="missedDose"><option value="no">No</option><option value="yes">Yes</option></select></label>
+   <label>Time taken <input id="medTime" type="time"></label><label>Medication reminder time <input id="reminderTime" type="time"></label><label>Missed dose?<select id="missedDose"><option value="no">No</option><option value="yes">Yes</option></select></label>
    <label>Protein breakfast?<select id="protein"><option value="yes">Yes</option><option value="no">No</option></select></label><label>Caffeine / mg <input id="caffeine" type="number" value="100"></label><label>Appetite <select id="appetite"><option>Normal</option><option>Reduced</option><option>Very reduced</option></select></label>
    <label>Crash time <input id="crashTime" type="time"></label><label>Crash severity /10 <input id="crashSeverity" type="number" min="0" max="10" value="5"></label>
   </div>
@@ -69,7 +69,7 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px
   <div class="checks">
    <label><input type="checkbox" class="side" value="Appetite suppression"> Appetite suppression</label><label><input type="checkbox" class="side" value="Headache"> Headache</label><label><input type="checkbox" class="side" value="Anxiety"> Anxiety</label><label><input type="checkbox" class="side" value="Irritability"> Irritability</label><label><input type="checkbox" class="side" value="Sleep affected"> Sleep affected</label><label><input type="checkbox" class="side" value="Heart rate noticeable"> Heart rate noticeable</label>
   </div>
-  <h2>Functional impact</h2><div class="grid two"><label>Work/function /10 <input id="workFunction" type="number" min="0" max="10" value="5"></label><label>Home tasks /10 <input id="homeFunction" type="number" min="0" max="10" value="5"></label><label>Family/emotional impact /10 <input id="familyFunction" type="number" min="0" max="10" value="5"></label></div><div id="medExplain" class="explain"></div>
+  <h2>Functional impact</h2><div class="grid two"><label>Work/function /10 <input id="workFunction" type="number" min="0" max="10" value="5"></label><label>Home tasks /10 <input id="homeFunction" type="number" min="0" max="10" value="5"></label><label>Family/emotional impact /10 <input id="familyFunction" type="number" min="0" max="10" value="5"></label></div><div class="explain"><b>Medication reminder</b>Set a reminder time, then press Enable Medication Reminder. The web app must be opened at least occasionally for browser notifications to work reliably.</div><button id="enableReminderBtn" type="button">Enable Medication Reminder</button><button id="testReminderBtn" type="button" class="secondary">Test Notification</button><div id="reminderStatus" class="explain"></div><div id="medExplain" class="explain"></div>
  </div>
 </div>
 
@@ -114,7 +114,7 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px
 </div>
 
 <div id="page-settings" class="page">
- <div class="card"><h2>Settings</h2><div class="explain"><b>Saving</b>Daily entries, titration phases, saved clinician reports and the current draft, including side-effect tick boxes, are saved on this device using browser storage. Export a backup before changing phones or clearing browser data.</div><label>Theme<select id="theme"><option value="light">Light</option><option value="dark">Dark</option><option value="amoled">AMOLED</option></select></label><button id="saveSettingsBtn">Save settings</button><button id="importBtn">Import backup</button><input id="importFile" type="file" accept=".json"><button id="clearDraftBtn">Clear current draft only</button><button class="danger" id="clearBtn">Clear all data</button></div>
+ <div class="card"><h2>Settings</h2><div class="explain"><b>Saving</b>Daily entries, titration phases, saved clinician reports, medication reminder settings and the current draft, including side-effect tick boxes, are saved on this device using browser storage. Export a backup before changing phones or clearing browser data.</div><label>Theme<select id="theme"><option value="light">Light</option><option value="dark">Dark</option><option value="amoled">AMOLED</option></select></label><button id="saveSettingsBtn">Save settings</button><button id="importBtn">Import backup</button><input id="importFile" type="file" accept=".json"><button id="clearDraftBtn">Clear current draft only</button><button class="danger" id="clearBtn">Clear all data</button></div>
 </div>
 </main>
 
@@ -353,7 +353,7 @@ if($('doseReportBtn'))$('doseReportBtn').onclick=()=>html('report',doseCompariso
 if($('saveReportBtn'))$('saveReportBtn').onclick=saveClinicianReport; if($('saveTitrationBtn'))$('saveTitrationBtn').onclick=saveTitration;$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-focus-os-backup.json';a.click()};if($('exportJsonBtn'))$('exportJsonBtn').onclick=$('exportBtn').onclick;$('importBtn').onclick=()=>{let f=$('importFile').files[0];if(!f)return alert('Choose a backup file first');let r=new FileReader();r.onload=e=>{db=JSON.parse(e.target.result);if(!db.titration)db.titration=[];if(!db.reports)db.reports=[];localStorage.setItem(KEY,JSON.stringify(db));alert('Backup imported');location.reload()};r.readAsText(f)};$('saveSettingsBtn').onclick=()=>{if(!db.settings)db.settings={};db.settings.theme=s('theme')||'light';localStorage.setItem(KEY,JSON.stringify(db));document.body.classList.remove('dark','amoled');if(db.settings.theme==='dark')document.body.classList.add('dark');if(db.settings.theme==='amoled')document.body.classList.add('amoled');alert('Settings saved')};$('clearDraftBtn').onclick=()=>{if(confirm('Clear current unsaved draft?')){clearFormState();localStorage.removeItem('focusOSFullDraftV153');location.reload()}};$('clearBtn').onclick=()=>{if(confirm('Clear all data?')){localStorage.removeItem(KEY);clearFormState();localStorage.removeItem('focusOSFullDraftV153');location.reload()}};render()}
 init();
 
-/* V1.5.4 button safety patch */
+/* V1.6 button safety patch */
 (function(){
   function q(id){return document.getElementById(id)}
   function saveStore(){
@@ -422,7 +422,7 @@ init();
 })();
 
 
-/* V1.5.4 full draft autosave patch */
+/* V1.6 full draft autosave patch */
 (function(){
   const DRAFT_KEY = 'focusOSFullDraftV153';
   function q(id){return document.getElementById(id)}
@@ -489,7 +489,7 @@ init();
 </script>
 
 <script>
-/* V1.5.4 persistent draft fix */
+/* V1.6 persistent draft fix */
 (function(){
   const DRAFT_KEY = 'FocusOS_v154_full_draft';
 
@@ -604,6 +604,121 @@ init();
   document.addEventListener('visibilitychange', ()=>{ if(document.hidden) saveDraft(); });
   window.addEventListener('pagehide', saveDraft);
   window.addEventListener('beforeunload', saveDraft);
+})();
+</script>
+
+
+<script>
+/* V1.6 medication reminder notifications */
+(function(){
+  const REMINDER_KEY = 'FocusOS_v16_med_reminder';
+  let reminderTimer = null;
+
+  function q(id){return document.getElementById(id)}
+  function getReminder(){
+    try{return JSON.parse(localStorage.getItem(REMINDER_KEY)||'{}')}catch(e){return {}}
+  }
+  function setReminder(data){
+    localStorage.setItem(REMINDER_KEY, JSON.stringify(data));
+  }
+  function status(msg){
+    const el=q('reminderStatus');
+    if(el) el.innerHTML='<b>Reminder status</b>'+msg;
+  }
+  function notify(title, body){
+    if(!('Notification' in window)){
+      alert(title + '\n' + body);
+      return;
+    }
+    if(Notification.permission === 'granted'){
+      try{
+        navigator.serviceWorker && navigator.serviceWorker.ready
+          ? navigator.serviceWorker.ready.then(reg=>reg.showNotification(title,{body:body,icon:'icon.svg',badge:'icon.svg'})).catch(()=>new Notification(title,{body:body,icon:'icon.svg'}))
+          : new Notification(title,{body:body,icon:'icon.svg'});
+      }catch(e){
+        new Notification(title,{body:body,icon:'icon.svg'});
+      }
+    } else {
+      alert(title + '\n' + body);
+    }
+  }
+  function msUntil(time){
+    if(!time) return null;
+    const parts=time.split(':').map(Number);
+    if(parts.length<2) return null;
+    const now=new Date();
+    const target=new Date();
+    target.setHours(parts[0],parts[1],0,0);
+    if(target<=now) target.setDate(target.getDate()+1);
+    return target-now;
+  }
+  function scheduleReminder(){
+    if(reminderTimer) clearTimeout(reminderTimer);
+    const r=getReminder();
+    if(!r.enabled || !r.time){
+      status('No active medication reminder.');
+      return;
+    }
+    const delay=msUntil(r.time);
+    if(delay===null){
+      status('Reminder time not set.');
+      return;
+    }
+    const mins=Math.round(delay/60000);
+    status('Active. Next reminder at '+r.time+' in about '+mins+' minutes.');
+    reminderTimer=setTimeout(()=>{
+      const med=(q('medName')&&q('medName').value) || r.med || 'medication';
+      const dose=(q('dose')&&q('dose').value) || r.dose || '';
+      notify('FocusOS medication reminder','Time to take '+med+(dose?' '+dose:'')+'.');
+      scheduleReminder();
+    }, delay);
+  }
+  async function enableReminder(){
+    const time=(q('reminderTime')&&q('reminderTime').value) || (q('medTime')&&q('medTime').value);
+    if(!time){
+      alert('Set a medication reminder time first.');
+      return;
+    }
+    if('Notification' in window && Notification.permission !== 'granted'){
+      const permission=await Notification.requestPermission();
+      if(permission !== 'granted'){
+        status('Notifications blocked. Reminder time saved, but Chrome will not show notifications until permission is allowed.');
+      }
+    }
+    setReminder({
+      enabled:true,
+      time:time,
+      med:(q('medName')&&q('medName').value)||'',
+      dose:(q('dose')&&q('dose').value)||'',
+      updatedAt:new Date().toISOString()
+    });
+    scheduleReminder();
+    alert('Medication reminder enabled for '+time);
+  }
+  function testReminder(){
+    notify('FocusOS test notification','This is what your medication reminder will look like.');
+  }
+  function restoreReminderUI(){
+    const r=getReminder();
+    if(r.time && q('reminderTime')) q('reminderTime').value=r.time;
+    scheduleReminder();
+  }
+
+  window.focusOSEnableReminder=enableReminder;
+  window.focusOSTestReminder=testReminder;
+
+  setTimeout(()=>{
+    if(q('enableReminderBtn')) q('enableReminderBtn').onclick=enableReminder;
+    if(q('testReminderBtn')) q('testReminderBtn').onclick=testReminder;
+    if(q('reminderTime')) q('reminderTime').addEventListener('change',()=>{
+      const r=getReminder();
+      r.time=q('reminderTime').value;
+      r.enabled=!!r.time;
+      setReminder(r);
+      scheduleReminder();
+    });
+    restoreReminderUI();
+  },150);
 })();
 </script>
 
