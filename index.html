@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>FocusOS ADHD Companion V1.7.1</title>
+<title>FocusOS ADHD Companion V1.8</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <meta name="theme-color" content="#151210">
@@ -61,7 +61,7 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px
   <h2>Medication tracking</h2>
   <div class="grid two">
    <label>Medication <input id="medName" placeholder="Elvanse"></label><label>Dose <input id="dose" placeholder="50mg"></label>
-   <label>Time taken <input id="medTime" type="time"></label><label>Medication reminder time <input id="reminderTime" type="time"></label><label>Missed dose?<select id="missedDose"><option value="no">No</option><option value="yes">Yes</option></select></label>
+   <label>Time taken <input id="medTime" type="time"></label><label>Medication reminder time <input id="reminderTime" type="time"></label><label>Remind every if missed <select id="missedReminderInterval"><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option></select></label><label>Missed dose?<select id="missedDose"><option value="no">No</option><option value="yes">Yes</option></select></label>
    <label>Protein breakfast?<select id="protein"><option value="yes">Yes</option><option value="no">No</option></select></label><label>Caffeine / mg <input id="caffeine" type="number" value="100"></label><label>Appetite <select id="appetite"><option>Normal</option><option>Reduced</option><option>Very reduced</option></select></label>
    <label>Crash time <input id="crashTime" type="time"></label><label>Crash severity /10 <input id="crashSeverity" type="number" min="0" max="10" value="5"></label>
   </div>
@@ -69,7 +69,7 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px
   <div class="checks">
    <label><input type="checkbox" class="side" value="Appetite suppression"> Appetite suppression</label><label><input type="checkbox" class="side" value="Headache"> Headache</label><label><input type="checkbox" class="side" value="Anxiety"> Anxiety</label><label><input type="checkbox" class="side" value="Irritability"> Irritability</label><label><input type="checkbox" class="side" value="Sleep affected"> Sleep affected</label><label><input type="checkbox" class="side" value="Heart rate noticeable"> Heart rate noticeable</label>
   </div>
-  <h2>Functional impact</h2><div class="grid two"><label>Work/function /10 <input id="workFunction" type="number" min="0" max="10" value="5"></label><label>Home tasks /10 <input id="homeFunction" type="number" min="0" max="10" value="5"></label><label>Family/emotional impact /10 <input id="familyFunction" type="number" min="0" max="10" value="5"></label></div><div class="explain"><b>Medication reminder</b>Set a reminder time, then press Set Android Alarm for the most reliable phone alarm. On Android/Chrome, notifications require site permission and may only be reliable while the PWA/site is allowed to send notifications.</div><button id="enableReminderBtn" type="button">Enable Medication Reminder</button><button id="setAndroidAlarmBtn" type="button" class="secondary">Try Set Android Alarm</button><button id="openSamsungClockBtn" type="button" class="secondary">Open Samsung Clock</button><button id="openGoogleClockBtn" type="button" class="secondary">Open Google Clock</button><button id="copyAlarmBtn" type="button" class="secondary">Copy Alarm Details</button><input id="testReminderBtn" type="button" class="secondary" value="Test Notification" style="font-weight:850;text-align:center;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;"><div id="reminderStatus" class="explain"></div><div id="medExplain" class="explain"></div>
+  <h2>Functional impact</h2><div class="grid two"><label>Work/function /10 <input id="workFunction" type="number" min="0" max="10" value="5"></label><label>Home tasks /10 <input id="homeFunction" type="number" min="0" max="10" value="5"></label><label>Family/emotional impact /10 <input id="familyFunction" type="number" min="0" max="10" value="5"></label></div><div class="explain"><b>Medication reminder</b>Set a medication time and a missed-meds reminder. If you do not mark meds as taken, FocusOS can keep reminding you until you cancel it. On Android/Chrome, notifications require site permission and may only be reliable while the PWA/site is allowed to send notifications.</div><button id="enableReminderBtn" type="button">Enable Medication Reminder</button><input id="testReminderBtn" type="button" class="secondary" value="Test Notification" style="font-weight:850;text-align:center;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;"><button id="markMedsTakenBtn" type="button" class="secondary">Mark Meds Taken Today</button><button id="cancelMissedReminderBtn" type="button" class="secondary">Cancel Missed Reminder Today</button><div id="reminderStatus" class="explain"></div><div id="medExplain" class="explain"></div>
  </div>
 </div>
 
@@ -353,7 +353,7 @@ if($('doseReportBtn'))$('doseReportBtn').onclick=()=>html('report',doseCompariso
 if($('saveReportBtn'))$('saveReportBtn').onclick=saveClinicianReport; if($('saveTitrationBtn'))$('saveTitrationBtn').onclick=saveTitration;$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-focus-os-backup.json';a.click()};if($('exportJsonBtn'))$('exportJsonBtn').onclick=$('exportBtn').onclick;$('importBtn').onclick=()=>{let f=$('importFile').files[0];if(!f)return alert('Choose a backup file first');let r=new FileReader();r.onload=e=>{db=JSON.parse(e.target.result);if(!db.titration)db.titration=[];if(!db.reports)db.reports=[];localStorage.setItem(KEY,JSON.stringify(db));alert('Backup imported');location.reload()};r.readAsText(f)};$('saveSettingsBtn').onclick=()=>{if(!db.settings)db.settings={};db.settings.theme=s('theme')||'light';localStorage.setItem(KEY,JSON.stringify(db));document.body.classList.remove('dark','amoled');if(db.settings.theme==='dark')document.body.classList.add('dark');if(db.settings.theme==='amoled')document.body.classList.add('amoled');alert('Settings saved')};$('clearDraftBtn').onclick=()=>{if(confirm('Clear current unsaved draft?')){clearFormState();localStorage.removeItem('focusOSFullDraftV153');location.reload()}};$('clearBtn').onclick=()=>{if(confirm('Clear all data?')){localStorage.removeItem(KEY);clearFormState();localStorage.removeItem('focusOSFullDraftV153');location.reload()}};render()}
 init();
 
-/* V1.7.1 button safety patch */
+/* V1.8 button safety patch */
 (function(){
   function q(id){return document.getElementById(id)}
   function saveStore(){
@@ -422,7 +422,7 @@ init();
 })();
 
 
-/* V1.7.1 full draft autosave patch */
+/* V1.8 full draft autosave patch */
 (function(){
   const DRAFT_KEY = 'focusOSFullDraftV153';
   function q(id){return document.getElementById(id)}
@@ -489,7 +489,7 @@ init();
 </script>
 
 <script>
-/* V1.7.1 persistent draft fix */
+/* V1.8 persistent draft fix */
 (function(){
   const DRAFT_KEY = 'FocusOS_v154_full_draft';
 
@@ -609,7 +609,7 @@ init();
 
 
 <script>
-/* V1.7.1 medication reminder notifications */
+/* V1.8 medication reminder notifications */
 (function(){
   const REMINDER_KEY = 'FocusOS_v16_med_reminder';
   let reminderTimer = null;
@@ -724,7 +724,7 @@ init();
 
 
 <script>
-/* V1.7.1 medication notification fix */
+/* V1.8 medication notification fix */
 (function(){
   const REMINDER_KEY = 'FocusOS_v161_med_reminder';
   let reminderTimer = null;
@@ -862,7 +862,7 @@ init();
 
 
 <script>
-/* V1.7.1 test button tap fix */
+/* V1.8 test button tap fix */
 (function(){
   const REMINDER_KEY = 'FocusOS_v162_med_reminder';
   let timer=null;
@@ -993,7 +993,7 @@ init();
 
 
 <script>
-/* V1.7.1 Android Chrome notification fix */
+/* V1.8 Android Chrome notification fix */
 (function(){
   const REMINDER_KEY = 'FocusOS_v163_med_reminder';
   let timer=null;
@@ -1155,7 +1155,7 @@ init();
 
 
 <script>
-/* V1.7.1 Android alarm intent integration */
+/* V1.8 Android alarm intent integration */
 (function(){
   function q(id){return document.getElementById(id)}
   function status(msg){
@@ -1223,7 +1223,7 @@ init();
 
 
 <script>
-/* V1.7.1 Android alarm fallback integration */
+/* V1.8 Android alarm fallback integration */
 (function(){
   function q(id){return document.getElementById(id)}
   function status(msg){
@@ -1300,6 +1300,192 @@ init();
   }
   setTimeout(wireAlarmFallbacks,100);
   setTimeout(wireAlarmFallbacks,500);
+})();
+</script>
+
+
+<script>
+/* V1.8 missed medication reminder */
+(function(){
+  const KEY_REMINDER = 'FocusOS_v18_missed_meds_reminder';
+  let dueTimer = null;
+  let repeatTimer = null;
+
+  function q(id){ return document.getElementById(id); }
+  function todayKey(){ return new Date().toISOString().slice(0,10); }
+  function status(msg){
+    const el=q('reminderStatus');
+    if(el) el.innerHTML='<b>Reminder status</b><br>'+msg;
+  }
+  function getState(){
+    try { return JSON.parse(localStorage.getItem(KEY_REMINDER)||'{}'); } catch(e){ return {}; }
+  }
+  function saveState(s){
+    localStorage.setItem(KEY_REMINDER, JSON.stringify(s));
+  }
+  function medText(){
+    const med=(q('medName')&&q('medName').value)||'medication';
+    const dose=(q('dose')&&q('dose').value)||'';
+    return med+(dose?' '+dose:'');
+  }
+  function parseTime(t){
+    if(!t || !t.includes(':')) return null;
+    const p=t.split(':').map(Number);
+    if(p.length<2 || Number.isNaN(p[0]) || Number.isNaN(p[1])) return null;
+    return {h:p[0], m:p[1], label:String(p[0]).padStart(2,'0')+':'+String(p[1]).padStart(2,'0')};
+  }
+  function nextDueMs(time){
+    const t=parseTime(time);
+    if(!t) return null;
+    const now=new Date();
+    const target=new Date();
+    target.setHours(t.h,t.m,0,0);
+    if(target<=now) target.setDate(target.getDate()+1);
+    return target-now;
+  }
+  async function permission(){
+    if(!('Notification' in window)) return false;
+    if(Notification.permission==='granted') return true;
+    if(Notification.permission==='denied') return false;
+    const res=await Notification.requestPermission();
+    return res==='granted';
+  }
+  async function notifyMissed(){
+    const body='Have you taken '+medText()+'? Mark it as taken in FocusOS or cancel reminders for today.';
+    const ok=await permission();
+    if(ok){
+      try{
+        if('serviceWorker' in navigator){
+          const reg=await navigator.serviceWorker.ready;
+          await reg.showNotification('FocusOS missed medication check', {
+            body: body,
+            icon: './icon.svg',
+            badge: './icon.svg',
+            tag: 'focusos-missed-meds',
+            renotify: true
+          });
+        }else{
+          new Notification('FocusOS missed medication check', {body:body, icon:'./icon.svg'});
+        }
+      }catch(e){
+        alert('FocusOS missed medication check\n\n'+body);
+      }
+    }else{
+      alert('FocusOS missed medication check\n\n'+body);
+    }
+  }
+  function isTakenOrCancelled(s){
+    const day=todayKey();
+    return s.takenDate===day || s.cancelledDate===day;
+  }
+  function startRepeat(){
+    if(repeatTimer) clearInterval(repeatTimer);
+    const s=getState();
+    const interval=Number(s.interval||15);
+    if(isTakenOrCancelled(s)){
+      status('Stopped for today. '+(s.takenDate===todayKey()?'Meds marked as taken.':'Reminder cancelled for today.'));
+      return;
+    }
+    status('Missed-meds reminders active every '+interval+' minutes until you mark meds taken or cancel for today.');
+    notifyMissed();
+    repeatTimer=setInterval(()=>{
+      const latest=getState();
+      if(isTakenOrCancelled(latest)){
+        clearInterval(repeatTimer);
+        repeatTimer=null;
+        status('Stopped for today.');
+        return;
+      }
+      notifyMissed();
+    }, interval*60000);
+  }
+  function schedule(){
+    if(dueTimer) clearTimeout(dueTimer);
+    if(repeatTimer) clearInterval(repeatTimer);
+    const s=getState();
+    if(!s.enabled || !s.time){
+      status('No missed-meds reminder active.');
+      return;
+    }
+    if(isTakenOrCancelled(s)){
+      status(s.takenDate===todayKey() ? 'Meds marked as taken today.' : 'Missed reminder cancelled for today.');
+      return;
+    }
+    const ms=nextDueMs(s.time);
+    if(ms===null){
+      status('Set a valid medication reminder time.');
+      return;
+    }
+    const mins=Math.max(1,Math.round(ms/60000));
+    status('Active. If meds are not marked as taken, reminders start at '+s.time+' and repeat every '+(s.interval||15)+' minutes. Next check in about '+mins+' minutes.');
+    dueTimer=setTimeout(startRepeat, ms);
+  }
+  async function enable(){
+    const time=(q('reminderTime')&&q('reminderTime').value)||(q('medTime')&&q('medTime').value);
+    if(!time){
+      alert('Set a medication reminder time first.');
+      return;
+    }
+    await permission();
+    const interval=(q('missedReminderInterval')&&q('missedReminderInterval').value)||'15';
+    saveState({
+      enabled:true,
+      time:time,
+      interval:interval,
+      med:(q('medName')&&q('medName').value)||'',
+      dose:(q('dose')&&q('dose').value)||'',
+      updatedAt:new Date().toISOString()
+    });
+    schedule();
+    alert('Missed-meds reminder enabled for '+time+'. It will repeat every '+interval+' minutes until cancelled or marked taken.');
+  }
+  function markTaken(){
+    const s=getState();
+    s.takenDate=todayKey();
+    s.cancelledDate='';
+    saveState(s);
+    if(repeatTimer) clearInterval(repeatTimer);
+    schedule();
+    alert('Meds marked as taken for today.');
+  }
+  function cancelToday(){
+    const s=getState();
+    s.cancelledDate=todayKey();
+    saveState(s);
+    if(repeatTimer) clearInterval(repeatTimer);
+    schedule();
+    alert('Missed-meds reminders cancelled for today.');
+  }
+  async function test(){
+    await notifyMissed();
+    status('Test sent. If no notification appears, Android/Chrome is blocking browser notifications, but the missed reminder logic is working.');
+  }
+  function restore(){
+    const s=getState();
+    if(s.time && q('reminderTime')) q('reminderTime').value=s.time;
+    if(s.interval && q('missedReminderInterval')) q('missedReminderInterval').value=s.interval;
+    schedule();
+  }
+  function wire(){
+    if(q('enableReminderBtn')){
+      q('enableReminderBtn').textContent='Enable Missed-Meds Reminder';
+      q('enableReminderBtn').onclick=enable;
+      q('enableReminderBtn').ontouchend=e=>{e.preventDefault();enable();};
+    }
+    if(q('testReminderBtn')){
+      if(q('testReminderBtn').tagName==='INPUT') q('testReminderBtn').value='Test Missed Reminder';
+      else q('testReminderBtn').textContent='Test Missed Reminder';
+      q('testReminderBtn').onclick=test;
+      q('testReminderBtn').ontouchend=e=>{e.preventDefault();test();};
+    }
+    if(q('markMedsTakenBtn')) q('markMedsTakenBtn').onclick=markTaken;
+    if(q('cancelMissedReminderBtn')) q('cancelMissedReminderBtn').onclick=cancelToday;
+    if(q('reminderTime')) q('reminderTime').onchange=()=>{ const s=getState(); s.time=q('reminderTime').value; saveState(s); schedule(); };
+    if(q('missedReminderInterval')) q('missedReminderInterval').onchange=()=>{ const s=getState(); s.interval=q('missedReminderInterval').value; saveState(s); schedule(); };
+    restore();
+  }
+  setTimeout(wire,100);
+  setTimeout(wire,500);
 })();
 </script>
 
