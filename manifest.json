@@ -1,6 +1,6 @@
 {
-  "name": "ADHD Focus OS V1.1",
-  "short_name": "ADHD Focus",
+  "name": "FocusOS ADHD Companion",
+  "short_name": "FocusOS",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
