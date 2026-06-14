@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>FocusOS ADHD Companion V1.4</title>
+<title>FocusOS ADHD Companion V1.5</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <meta name="theme-color" content="#151210">
@@ -62,14 +62,14 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px
   <div class="grid two">
    <label>Medication <input id="medName" placeholder="Elvanse"></label><label>Dose <input id="dose" placeholder="50mg"></label>
    <label>Time taken <input id="medTime" type="time"></label><label>Missed dose?<select id="missedDose"><option value="no">No</option><option value="yes">Yes</option></select></label>
-   <label>Protein breakfast?<select id="protein"><option value="yes">Yes</option><option value="no">No</option></select></label><label>Caffeine / mg <input id="caffeine" type="number" value="100"></label>
+   <label>Protein breakfast?<select id="protein"><option value="yes">Yes</option><option value="no">No</option></select></label><label>Caffeine / mg <input id="caffeine" type="number" value="100"></label><label>Appetite <select id="appetite"><option>Normal</option><option>Reduced</option><option>Very reduced</option></select></label>
    <label>Crash time <input id="crashTime" type="time"></label><label>Crash severity /10 <input id="crashSeverity" type="number" min="0" max="10" value="5"></label>
   </div>
   <h2>Side effects</h2>
   <div class="checks">
    <label><input type="checkbox" class="side" value="Appetite suppression"> Appetite suppression</label><label><input type="checkbox" class="side" value="Headache"> Headache</label><label><input type="checkbox" class="side" value="Anxiety"> Anxiety</label><label><input type="checkbox" class="side" value="Irritability"> Irritability</label><label><input type="checkbox" class="side" value="Sleep affected"> Sleep affected</label><label><input type="checkbox" class="side" value="Heart rate noticeable"> Heart rate noticeable</label>
   </div>
-  <div id="medExplain" class="explain"></div>
+  <h2>Functional impact</h2><div class="grid two"><label>Work/function /10 <input id="workFunction" type="number" min="0" max="10" value="5"></label><label>Home tasks /10 <input id="homeFunction" type="number" min="0" max="10" value="5"></label><label>Family/emotional impact /10 <input id="familyFunction" type="number" min="0" max="10" value="5"></label></div><div id="medExplain" class="explain"></div>
  </div>
 </div>
 
@@ -109,7 +109,7 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px
 
 <div id="page-insights" class="page">
  <div class="card"><h2>Patterns</h2><div id="insights"></div></div>
- <div class="card"><h2>Clinician report</h2><button id="reportBtn">Generate report</button><button id="saveReportBtn">Save report</button><pre id="report"></pre></div>
+ <div class="card"><h2>Clinician reports</h2><div class="grid two"><button id="quickReportBtn">Quick Report</button><button id="fullReportBtn">Full Report</button><button id="doseReportBtn">Dose Comparison</button><button id="saveReportBtn">Save Report</button></div><pre id="report"></pre></div>
  <div class="card"><h2>Saved reports</h2><p class="muted">Reports are saved on this device and included in backups.</p><div id="savedReports"></div></div>
 </div>
 
@@ -240,9 +240,117 @@ window.deleteSavedReport=function(i){
   }
 }
 
-function report(){let es=db.entries;return 'FOCUSOS ADHD TITRATION REPORT\\n\\nEntries: '+es.length+'\\nAverage ADHD: '+(es.length?avg(es.map(e=>e.adhd.score)).toFixed(1):'--')+'\\nAverage Medication: '+(es.length?avg(es.map(e=>e.med.score)).toFixed(1):'--')+'\\nAverage Sleep: '+(es.length?avg(es.map(e=>e.sleep.score)).toFixed(1):'--')+'\\n\\nTITRATION TIMELINE\\n'+titrationReport()+'\\n\\nRecent notes included in saved entries.'}
+
+function latestEntry(){
+  return db.entries.length ? db.entries[db.entries.length-1] : current();
+}
+function safeAvg(arr, suffix=''){
+  return arr.length ? avg(arr).toFixed(1)+suffix : '--';
+}
+function mostCommon(arr){
+  let c={}; arr.filter(Boolean).forEach(x=>c[x]=(c[x]||0)+1);
+  let s=Object.entries(c).sort((a,b)=>b[1]-a[1]);
+  return s.length?s[0][0]:'--';
+}
+function allSideEffects(){
+  return db.entries.flatMap(e=>e.sideEffects||[]);
+}
+function latestTitration(){
+  if(db.titration && db.titration.length) return db.titration[db.titration.length-1];
+  let e=latestEntry();
+  return {med:e.medName||'--',dose:e.dose||'--',start:'--',end:'ongoing',weight:e.weight||'',bp:'',pulse:'',notes:''};
+}
+function daysOnCurrentDose(){
+  let t=latestTitration();
+  if(!t.start || t.start==='--') return '--';
+  let d=Math.max(1,Math.ceil((new Date()-new Date(t.start))/(1000*60*60*24)));
+  return d;
+}
+function entriesForPhase(t){
+  let sDate=t.start?new Date(t.start):new Date(0);
+  let eDate=t.end?new Date(t.end):new Date();
+  return db.entries.filter(e=>{let d=new Date(e.date);return d>=sDate&&d<=eDate;});
+}
+function titrationReport(){
+  if(!db.titration || !db.titration.length) return 'No titration phases logged.';
+  let weights=db.titration.filter(t=>t.weight).map(t=>Number(t.weight));
+  let weightLine=weights.length?'Weight: start '+weights[0]+', latest '+weights[weights.length-1]+', change '+(weights[weights.length-1]-weights[0]).toFixed(1):'Weight: not logged';
+  let phases=db.titration.map(t=>{
+    let end=t.end?t.end:'ongoing';
+    let related=entriesForPhase(t);
+    let summary=related.length
+      ? ' | Entries: '+related.length+' | Avg ADHD: '+safeAvg(related.map(e=>e.adhd.score),'/100')+' | Avg Med: '+safeAvg(related.map(e=>e.med.score),'%')+' | Avg Sleep: '+safeAvg(related.map(e=>e.sleep.score),'/100')+' | Avg Crash Severity: '+safeAvg(related.map(e=>e.crashSeverity||0).filter(x=>x>0),'/10')
+      : ' | No daily entries in this phase yet';
+    let vitals=[]; if(t.weight)vitals.push('Weight '+t.weight); if(t.bp)vitals.push('BP '+t.bp); if(t.pulse)vitals.push('Pulse '+t.pulse);
+    return '- '+t.start+' to '+end+': '+t.med+' '+t.dose+(vitals.length?' | '+vitals.join(' | '):'')+summary+(t.notes?' | Notes: '+t.notes:'');
+  }).join('\n');
+  return weightLine+'\n'+phases;
+}
+function doseComparisonReport(){
+  if(!db.titration || db.titration.length<2) return 'Dose comparison needs at least two titration phases.';
+  let blocks=db.titration.map(t=>{
+    let es=entriesForPhase(t);
+    let crash=es.map(e=>e.crashSeverity||0).filter(x=>x>0);
+    return {label:t.med+' '+t.dose,start:t.start,end:t.end||'ongoing',adhd:es.length?avg(es.map(e=>e.adhd.score)):null,med:es.length?avg(es.map(e=>e.med.score)):null,sleep:es.length?avg(es.map(e=>e.sleep.score)):null,crash:crash.length?avg(crash):null,entries:es.length};
+  });
+  let text='DOSE COMPARISON REPORT\n\n';
+  blocks.forEach(b=>{
+    text+=b.label+'\n'+b.start+' to '+b.end+'\nEntries: '+b.entries+'\nADHD Score: '+(b.adhd!==null?b.adhd.toFixed(1):'--')+'\nMedication Score: '+(b.med!==null?b.med.toFixed(1):'--')+'\nSleep Score: '+(b.sleep!==null?b.sleep.toFixed(1):'--')+'\nCrash Severity: '+(b.crash!==null?b.crash.toFixed(1):'--')+'\n\n';
+  });
+  let first=blocks[0], last=blocks[blocks.length-1];
+  if(first.adhd!==null && last.adhd!==null){
+    text+='CHANGE FROM FIRST TO LATEST\n';
+    text+='ADHD Score: '+first.adhd.toFixed(1)+' → '+last.adhd.toFixed(1)+' ('+(((last.adhd-first.adhd)/first.adhd)*100).toFixed(0)+'%)\n';
+    text+='Medication Score: '+first.med.toFixed(1)+' → '+last.med.toFixed(1)+' ('+(((last.med-first.med)/first.med)*100).toFixed(0)+'%)\n';
+    if(first.crash!==null&&last.crash!==null) text+='Crash Severity: '+first.crash.toFixed(1)+' → '+last.crash.toFixed(1)+' ('+(((last.crash-first.crash)/first.crash)*100).toFixed(0)+'%)\n';
+  }
+  return text;
+}
+function clinicalDiscussionPoints(){
+  let es=db.entries, e=latestEntry(), pts=[];
+  if(!es.length) return '- Not enough saved daily entries yet.';
+  let avgCrash=safeAvg(es.map(x=>x.crashSeverity||0).filter(x=>x>0),'/10');
+  if(e.med && e.med.risk==='HIGH') pts.push('Review afternoon crash / medication duration.');
+  if(e.sleep && e.sleep.score<70) pts.push('Review sleep quality and whether medication is affecting sleep.');
+  if(e.weight) pts.push('Continue monitoring weight and appetite during titration.');
+  if((e.appetite||'').toLowerCase().includes('reduced')) pts.push('Monitor appetite suppression and meal timing.');
+  if(e.adhd && e.adhd.exec<60) pts.push('Task initiation/executive function remains a key difficulty.');
+  if(!pts.length) pts.push('Continue current monitoring and compare next dose phase with previous phase.');
+  return pts.map(x=>'- '+x).join('\n');
+}
+function quickReport(){
+  let es=db.entries, e=latestEntry(), t=latestTitration();
+  return 'FOCUSOS ADHD QUICK REPORT\n\nGenerated: '+new Date().toLocaleString('en-GB')+
+  '\n\nCURRENT SUMMARY\nMedication: '+(e.medName||t.med||'--')+'\nDose: '+(e.dose||t.dose||'--')+'\nCurrent titration phase started: '+(t.start||'--')+'\nDays on current dose: '+daysOnCurrentDose()+
+  '\nWeight: '+(t.weight||e.weight||'--')+'\nBlood pressure: '+(t.bp||'--')+'\nPulse: '+(t.pulse||'--')+
+  '\n\nAVERAGES\nEntries: '+es.length+'\nADHD Score: '+safeAvg(es.map(x=>x.adhd.score),'/100')+'\nMedication Score: '+safeAvg(es.map(x=>x.med.score),'%')+'\nSleep Score: '+safeAvg(es.map(x=>x.sleep.score),'/100')+
+  '\n\nCRASH / SIDE EFFECTS\nAverage Crash Severity: '+safeAvg(es.map(x=>x.crashSeverity||0).filter(x=>x>0),'/10')+'\nMost Common Side Effect: '+mostCommon(allSideEffects())+
+  '\n\nDISCUSSION POINTS\n'+clinicalDiscussionPoints();
+}
+function fullReport(){
+  let es=db.entries, e=latestEntry(), t=latestTitration();
+  let goodSleep=es.filter(x=>x.sleep.duration>=8), poorSleep=es.filter(x=>x.sleep.duration<7);
+  let weights=[...db.titration.filter(t=>t.weight).map(t=>Number(t.weight)),...es.filter(x=>x.weight).map(x=>Number(x.weight))].filter(Boolean);
+  let journals=es.map(x=>x.journal||{}), wins=journals.map(j=>j.wins||j.win).filter(Boolean), struggles=journals.map(j=>j.struggles||j.struggle).filter(Boolean);
+  return 'FOCUSOS ADHD FULL TITRATION REPORT\n\nGenerated: '+new Date().toLocaleString('en-GB')+
+  '\n\nPATIENT SUMMARY\nCurrent Medication: '+(e.medName||t.med||'--')+'\nCurrent Dose: '+(e.dose||t.dose||'--')+'\nCurrent Weight: '+(weights.length?weights[weights.length-1]:'--')+'\nBlood Pressure: '+(t.bp||'--')+'\nPulse: '+(t.pulse||'--')+'\nCurrent Titration Phase: '+(t.med||'--')+' '+(t.dose||'--')+'\nDays on Current Dose: '+daysOnCurrentDose()+
+  '\n\nADHD SYMPTOM OVERVIEW\nAverage ADHD Score: '+safeAvg(es.map(x=>x.adhd.score),'/100')+'\nExecutive Function Average: '+safeAvg(es.map(x=>x.adhd.exec).filter(Boolean),'/100')+'\nTask Initiation Average: '+safeAvg(es.map(x=>x.vals&&x.vals.initiation?x.vals.initiation:0).filter(Boolean),'/10')+'\nMental Noise Average: '+safeAvg(es.map(x=>x.vals&&x.vals.noise?x.vals.noise:0).filter(Boolean),'/10')+
+  '\n\nMEDICATION EFFECTIVENESS\nAverage Medication Score: '+safeAvg(es.map(x=>x.med.score),'%')+'\nAverage Crash Severity: '+safeAvg(es.map(x=>x.crashSeverity||0).filter(x=>x>0),'/10')+'\nMost Common Side Effect: '+mostCommon(allSideEffects())+'\nAverage Appetite Status: '+mostCommon(es.map(x=>x.appetite))+
+  '\n\nFUNCTIONAL IMPACT\nWork/function average: '+safeAvg(es.map(x=>x.functionImpact&&x.functionImpact.work).filter(Boolean),'/10')+'\nHome tasks average: '+safeAvg(es.map(x=>x.functionImpact&&x.functionImpact.home).filter(Boolean),'/10')+'\nFamily/emotional impact average: '+safeAvg(es.map(x=>x.functionImpact&&x.functionImpact.family).filter(Boolean),'/10')+
+  '\n\nSLEEP ANALYSIS\nAverage Sleep Duration: '+safeAvg(es.map(x=>x.sleep.duration),'h')+'\nAverage Sleep Score: '+safeAvg(es.map(x=>x.sleep.score),'/100')+'\nADHD Score on 8h+ Sleep Days: '+safeAvg(goodSleep.map(x=>x.adhd.score),'/100')+'\nADHD Score on <7h Sleep Days: '+safeAvg(poorSleep.map(x=>x.adhd.score),'/100')+
+  '\n\nWEIGHT MONITORING\nStarting Weight: '+(weights.length?weights[0]:'--')+'\nCurrent Weight: '+(weights.length?weights[weights.length-1]:'--')+'\nTotal Change: '+(weights.length>1?(weights[weights.length-1]-weights[0]).toFixed(1):'--')+'\nHighest Recorded Weight: '+(weights.length?Math.max(...weights):'--')+'\nLowest Recorded Weight: '+(weights.length?Math.min(...weights):'--')+
+  '\n\nJOURNAL HIGHLIGHTS\nPositive Themes:\n'+(wins.length?wins.map(x=>'- '+x).join('\n'):'- None logged')+'\n\nChallenges:\n'+(struggles.length?struggles.map(x=>'- '+x).join('\n'):'- None logged')+
+  '\n\nTITRATION TIMELINE\n'+titrationReport()+
+  '\n\nCLINICAL DISCUSSION POINTS\n'+clinicalDiscussionPoints()+
+  '\n\nEND OF REPORT';
+}
+function report(){return fullReport();}
+
 function show(page){document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$('page-'+page).classList.add('active');scrollTo(0,0)}
-function init(){set('todayTitle',new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}));loadFormState();sliders(adhd,'adhdSliders');sliders(mood,'moodSliders'); if($('titStart'))$('titStart').value=new Date().toISOString().slice(0,10);if(db.settings.theme)document.body.classList.add(db.settings.theme);document.querySelectorAll('input,select,textarea').forEach(el=>{el.addEventListener('input',()=>{saveFormState();render()});el.addEventListener('change',()=>{saveFormState();render()})});$('tabs').onclick=e=>{let b=e.target.closest('[data-page]');if(b)show(b.dataset.page)};$('saveBtn').onclick=()=>{db.entries.push(current());saveFormState();save();set('saveStatus','Entry saved. Draft remains saved on this device.');alert('Entry saved')}; if($('saveTitrationBtn'))$('saveTitrationBtn').onclick=saveTitration;$('reportBtn').onclick=()=>html('report',report()); if($('saveReportBtn'))$('saveReportBtn').onclick=saveClinicianReport;$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-focus-os-backup.json';a.click()};$('exportJsonBtn').onclick=$('exportBtn').onclick;$('saveSettingsBtn').onclick=()=>{db.settings.theme=s('theme');localStorage.setItem(KEY,JSON.stringify(db));location.reload()};$('clearDraftBtn').onclick=()=>{if(confirm('Clear current unsaved draft?')){clearFormState();location.reload()}};$('clearBtn').onclick=()=>{if(confirm('Clear all data?')){localStorage.removeItem(KEY);clearFormState();location.reload()}};render()}
+function init(){set('todayTitle',new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}));loadFormState();sliders(adhd,'adhdSliders');sliders(mood,'moodSliders'); if($('titStart'))$('titStart').value=new Date().toISOString().slice(0,10);if(db.settings.theme)document.body.classList.add(db.settings.theme);document.querySelectorAll('input,select,textarea').forEach(el=>{el.addEventListener('input',()=>{saveFormState();render()});el.addEventListener('change',()=>{saveFormState();render()})});$('tabs').onclick=e=>{let b=e.target.closest('[data-page]');if(b)show(b.dataset.page)};$('saveBtn').onclick=()=>{db.entries.push(current());saveFormState();save();set('saveStatus','Entry saved. Draft remains saved on this device.');alert('Entry saved')};if($('quickReportBtn'))$('quickReportBtn').onclick=()=>html('report',quickReport());
+if($('fullReportBtn'))$('fullReportBtn').onclick=()=>html('report',fullReport());
+if($('doseReportBtn'))$('doseReportBtn').onclick=()=>html('report',doseComparisonReport());
+if($('saveReportBtn'))$('saveReportBtn').onclick=saveClinicianReport; if($('saveTitrationBtn'))$('saveTitrationBtn').onclick=saveTitration;$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-focus-os-backup.json';a.click()};$('exportJsonBtn').onclick=$('exportBtn').onclick;$('saveSettingsBtn').onclick=()=>{db.settings.theme=s('theme');localStorage.setItem(KEY,JSON.stringify(db));location.reload()};$('clearDraftBtn').onclick=()=>{if(confirm('Clear current unsaved draft?')){clearFormState();location.reload()}};$('clearBtn').onclick=()=>{if(confirm('Clear all data?')){localStorage.removeItem(KEY);clearFormState();location.reload()}};render()}
 init();
 </script>
 </body>
