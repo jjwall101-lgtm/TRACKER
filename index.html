@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>FocusOS ADHD Companion</title>
+<title>FocusOS ADHD Companion V1.3</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <meta name="theme-color" content="#151210">
@@ -45,7 +45,7 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px
  <div class="grid">
   <div class="card stat"><b id="adhdOut">--</b><span>ADHD</span></div><div class="card stat"><b id="medOut">--</b><span>Meds</span></div><div class="card stat"><b id="sleepOut">--</b><span>Sleep</span></div><div class="card stat"><b id="riskOut">--</b><span>Risk</span></div>
  </div>
- <div class="card"><h2>Score explained</h2><div id="scoreExplain" class="explain"></div><button id="saveBtn">Save Daily Entry</button></div>
+ <div class="card"><h2>Score explained</h2><div id="scoreExplain" class="explain"></div><button id="saveBtn">Save Daily Entry</button><p class="muted" id="saveStatus">Draft auto-saves on this device.</p></div>
  <div class="card"><h2>Today’s ADHD plan</h2><div id="plan"></div></div>
  <div class="card"><h2>History</h2><div id="history"></div></div>
 </div>
@@ -113,7 +113,7 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px
 </div>
 
 <div id="page-settings" class="page">
- <div class="card"><h2>Settings</h2><label>Theme<select id="theme"><option value="light">Light</option><option value="dark">Dark</option><option value="amoled">AMOLED</option></select></label><button id="saveSettingsBtn">Save settings</button><button id="importBtn">Import backup</button><input id="importFile" type="file" accept=".json"><button class="danger" id="clearBtn">Clear all data</button></div>
+ <div class="card"><h2>Settings</h2><div class="explain"><b>Saving</b>Daily entries, titration phases and the current draft are saved on this device using browser storage. Export a backup before changing phones or clearing browser data.</div><label>Theme<select id="theme"><option value="light">Light</option><option value="dark">Dark</option><option value="amoled">AMOLED</option></select></label><button id="saveSettingsBtn">Save settings</button><button id="importBtn">Import backup</button><input id="importFile" type="file" accept=".json"><button id="clearDraftBtn">Clear current draft only</button><button class="danger" id="clearBtn">Clear all data</button></div>
 </div>
 </main>
 
@@ -121,13 +121,38 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px
 const $=id=>document.getElementById(id);
 const KEY='adhdFocusOSv1';
 let db=JSON.parse(localStorage.getItem(KEY)||'{"entries":[],"titration":[],"settings":{"theme":"light"}}'); if(!db.titration)db.titration=[];
+const FORMKEY='focusOSFormStateV13';
+function saveFormState(){
+  const data={vals:{...vals},fields:{}};
+  document.querySelectorAll('input,select,textarea').forEach(el=>{
+    if(!el.id) return;
+    data.fields[el.id]=el.type==='checkbox'?el.checked:el.value;
+  });
+  localStorage.setItem(FORMKEY,JSON.stringify(data));
+}
+function loadFormState(){
+  try{
+    const data=JSON.parse(localStorage.getItem(FORMKEY)||'{}');
+    if(data.vals) vals={...vals,...data.vals};
+    if(data.fields){
+      Object.entries(data.fields).forEach(([id,val])=>{
+        const el=$(id);
+        if(!el) return;
+        if(el.type==='checkbox') el.checked=!!val;
+        else el.value=val;
+      });
+    }
+  }catch(e){}
+}
+function clearFormState(){localStorage.removeItem(FORMKEY);}
+
 let vals={focus:5,initiation:5,switching:5,noise:5,impulsivity:5,regulation:5,mood:5,motivation:5,anxiety:5,irritability:5};
 const adhd=[['focus','Focus',25,false],['initiation','Task initiation',20,false],['switching','Task switching',15,false],['regulation','Emotional regulation',15,false],['noise','Mental noise',15,true],['impulsivity','Impulsivity',10,true]];
 const mood=[['mood','Mood'],['motivation','Motivation'],['anxiety','Anxiety'],['irritability','Irritability']];
 function n(id,d=0){let e=$(id);let v=e?Number(e.value):d;return Number.isFinite(v)?v:d} function s(id){let e=$(id);return e?e.value:''} function set(id,v){let e=$(id);if(e)e.textContent=v} function html(id,v){let e=$(id);if(e)e.innerHTML=v} function clamp(x,a,b){return Math.max(a,Math.min(b,x))} function avg(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:null}
 function minutes(t){if(!t)return null;let p=t.split(':').map(Number);return p[0]*60+p[1]} function diff(a,b){let x=minutes(a),y=minutes(b);if(x==null||y==null)return null;if(y<x)y+=1440;return y-x}
 function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
-function sliders(list,wrap){let w=$(wrap);w.innerHTML='';list.forEach(m=>{let r=document.createElement('div');r.className='row';r.innerHTML='<div class="rowTop"><span>'+m[1]+'</span><span id="'+m[0]+'Val">'+vals[m[0]]+'</span></div><input id="'+m[0]+'" type="range" min="0" max="10" value="'+vals[m[0]]+'">';w.appendChild(r);$(m[0]).oninput=e=>{vals[m[0]]=Number(e.target.value);set(m[0]+'Val',vals[m[0]]);render()}})}
+function sliders(list,wrap){let w=$(wrap);w.innerHTML='';list.forEach(m=>{let r=document.createElement('div');r.className='row';r.innerHTML='<div class="rowTop"><span>'+m[1]+'</span><span id="'+m[0]+'Val">'+vals[m[0]]+'</span></div><input id="'+m[0]+'" type="range" min="0" max="10" value="'+vals[m[0]]+'">';w.appendChild(r);$(m[0]).oninput=e=>{vals[m[0]]=Number(e.target.value);set(m[0]+'Val',vals[m[0]]);saveFormState();render()}})}
 function calcADHD(){let total=0;adhd.forEach(m=>total+=(m[3]?10-vals[m[0]]:vals[m[0]])*m[2]);let score=Math.round(total/10);let exec=Math.round((vals.focus+vals.initiation+vals.switching+vals.regulation)/40*100);return{score,exec}}
 function calcMood(){return Math.round((vals.mood+vals.motivation+(10-vals.anxiety)+(10-vals.irritability))/40*100)}
 function calcSleep(){let dur=diff(s('bedtime'),s('wakeTime'));dur=dur==null?8:dur/60;let q=n('quality',8),w=n('wakings',1);let score=Math.round(clamp((dur<=8?dur/8*50:50)+(q/10*40)+Math.max(0,10-w*2),0,100));return{duration:Number(dur.toFixed(1)),score,debt:Number(Math.max(0,8-dur).toFixed(1))}}
@@ -163,7 +188,7 @@ function saveTitration(){
   let dose=s('titDose') || s('dose') || '';
   let start=s('titStart') || new Date().toISOString().slice(0,10);
   db.titration.push({med,dose,start,end:s('titEnd'),weight:s('titWeight')||s('weight'),bp:s('titBP'),pulse:s('titPulse'),notes:s('titNotes')});
-  save(); alert('Titration phase saved');
+  saveFormState(); save(); alert('Titration phase saved');
 }
 function titrationReport(){
   if(!db.titration || !db.titration.length) return 'No titration phases logged.';
@@ -180,7 +205,7 @@ function titrationReport(){
 }
 function report(){let es=db.entries;return 'FOCUSOS ADHD TITRATION REPORT\\n\\nEntries: '+es.length+'\\nAverage ADHD: '+(es.length?avg(es.map(e=>e.adhd.score)).toFixed(1):'--')+'\\nAverage Medication: '+(es.length?avg(es.map(e=>e.med.score)).toFixed(1):'--')+'\\nAverage Sleep: '+(es.length?avg(es.map(e=>e.sleep.score)).toFixed(1):'--')+'\\n\\nTITRATION TIMELINE\\n'+titrationReport()+'\\n\\nRecent notes included in saved entries.'}
 function show(page){document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$('page-'+page).classList.add('active');scrollTo(0,0)}
-function init(){set('todayTitle',new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}));sliders(adhd,'adhdSliders');sliders(mood,'moodSliders'); if($('titStart'))$('titStart').value=new Date().toISOString().slice(0,10);if(db.settings.theme)document.body.classList.add(db.settings.theme);document.querySelectorAll('input,select,textarea').forEach(el=>{el.addEventListener('input',render);el.addEventListener('change',render)});$('tabs').onclick=e=>{let b=e.target.closest('[data-page]');if(b)show(b.dataset.page)};$('saveBtn').onclick=()=>{db.entries.push(current());save();alert('Entry saved')}; if($('saveTitrationBtn'))$('saveTitrationBtn').onclick=saveTitration;$('reportBtn').onclick=()=>html('report',report());$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-focus-os-backup.json';a.click()};$('exportJsonBtn').onclick=$('exportBtn').onclick;$('saveSettingsBtn').onclick=()=>{db.settings.theme=s('theme');localStorage.setItem(KEY,JSON.stringify(db));location.reload()};$('clearBtn').onclick=()=>{if(confirm('Clear all data?')){localStorage.removeItem(KEY);location.reload()}};render()}
+function init(){set('todayTitle',new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}));loadFormState();sliders(adhd,'adhdSliders');sliders(mood,'moodSliders'); if($('titStart'))$('titStart').value=new Date().toISOString().slice(0,10);if(db.settings.theme)document.body.classList.add(db.settings.theme);document.querySelectorAll('input,select,textarea').forEach(el=>{el.addEventListener('input',()=>{saveFormState();render()});el.addEventListener('change',()=>{saveFormState();render()})});$('tabs').onclick=e=>{let b=e.target.closest('[data-page]');if(b)show(b.dataset.page)};$('saveBtn').onclick=()=>{db.entries.push(current());saveFormState();save();set('saveStatus','Entry saved. Draft remains saved on this device.');alert('Entry saved')}; if($('saveTitrationBtn'))$('saveTitrationBtn').onclick=saveTitration;$('reportBtn').onclick=()=>html('report',report());$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-focus-os-backup.json';a.click()};$('exportJsonBtn').onclick=$('exportBtn').onclick;$('saveSettingsBtn').onclick=()=>{db.settings.theme=s('theme');localStorage.setItem(KEY,JSON.stringify(db));location.reload()};$('clearDraftBtn').onclick=()=>{if(confirm('Clear current unsaved draft?')){clearFormState();location.reload()}};$('clearBtn').onclick=()=>{if(confirm('Clear all data?')){localStorage.removeItem(KEY);clearFormState();location.reload()}};render()}
 init();
 </script>
 </body>
