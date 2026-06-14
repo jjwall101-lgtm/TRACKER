@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>FocusOS ADHD Companion V1.5.3</title>
+<title>FocusOS ADHD Companion V1.5.4</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <meta name="theme-color" content="#151210">
@@ -114,7 +114,7 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px
 </div>
 
 <div id="page-settings" class="page">
- <div class="card"><h2>Settings</h2><div class="explain"><b>Saving</b>Daily entries, titration phases, saved clinician reports and the current draft are saved on this device using browser storage. Export a backup before changing phones or clearing browser data.</div><label>Theme<select id="theme"><option value="light">Light</option><option value="dark">Dark</option><option value="amoled">AMOLED</option></select></label><button id="saveSettingsBtn">Save settings</button><button id="importBtn">Import backup</button><input id="importFile" type="file" accept=".json"><button id="clearDraftBtn">Clear current draft only</button><button class="danger" id="clearBtn">Clear all data</button></div>
+ <div class="card"><h2>Settings</h2><div class="explain"><b>Saving</b>Daily entries, titration phases, saved clinician reports and the current draft, including side-effect tick boxes, are saved on this device using browser storage. Export a backup before changing phones or clearing browser data.</div><label>Theme<select id="theme"><option value="light">Light</option><option value="dark">Dark</option><option value="amoled">AMOLED</option></select></label><button id="saveSettingsBtn">Save settings</button><button id="importBtn">Import backup</button><input id="importFile" type="file" accept=".json"><button id="clearDraftBtn">Clear current draft only</button><button class="danger" id="clearBtn">Clear all data</button></div>
 </div>
 </main>
 
@@ -353,7 +353,7 @@ if($('doseReportBtn'))$('doseReportBtn').onclick=()=>html('report',doseCompariso
 if($('saveReportBtn'))$('saveReportBtn').onclick=saveClinicianReport; if($('saveTitrationBtn'))$('saveTitrationBtn').onclick=saveTitration;$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-focus-os-backup.json';a.click()};if($('exportJsonBtn'))$('exportJsonBtn').onclick=$('exportBtn').onclick;$('importBtn').onclick=()=>{let f=$('importFile').files[0];if(!f)return alert('Choose a backup file first');let r=new FileReader();r.onload=e=>{db=JSON.parse(e.target.result);if(!db.titration)db.titration=[];if(!db.reports)db.reports=[];localStorage.setItem(KEY,JSON.stringify(db));alert('Backup imported');location.reload()};r.readAsText(f)};$('saveSettingsBtn').onclick=()=>{if(!db.settings)db.settings={};db.settings.theme=s('theme')||'light';localStorage.setItem(KEY,JSON.stringify(db));document.body.classList.remove('dark','amoled');if(db.settings.theme==='dark')document.body.classList.add('dark');if(db.settings.theme==='amoled')document.body.classList.add('amoled');alert('Settings saved')};$('clearDraftBtn').onclick=()=>{if(confirm('Clear current unsaved draft?')){clearFormState();localStorage.removeItem('focusOSFullDraftV153');location.reload()}};$('clearBtn').onclick=()=>{if(confirm('Clear all data?')){localStorage.removeItem(KEY);clearFormState();localStorage.removeItem('focusOSFullDraftV153');location.reload()}};render()}
 init();
 
-/* V1.5.3 button safety patch */
+/* V1.5.4 button safety patch */
 (function(){
   function q(id){return document.getElementById(id)}
   function saveStore(){
@@ -422,7 +422,7 @@ init();
 })();
 
 
-/* V1.5.3 full draft autosave patch */
+/* V1.5.4 full draft autosave patch */
 (function(){
   const DRAFT_KEY = 'focusOSFullDraftV153';
   function q(id){return document.getElementById(id)}
@@ -487,5 +487,125 @@ init();
 })();
 
 </script>
+
+<script>
+/* V1.5.4 persistent draft fix */
+(function(){
+  const DRAFT_KEY = 'FocusOS_v154_full_draft';
+
+  function allFields(){
+    return Array.from(document.querySelectorAll('input, select, textarea'));
+  }
+
+  function saveDraft(){
+    const draft = { fields:{}, sliders:{}, sideEffects:[], savedAt:new Date().toISOString() };
+
+    allFields().forEach(el=>{
+      if(!el.id) return;
+      if(el.type === 'checkbox'){
+        draft.fields[el.id] = el.checked;
+      } else {
+        draft.fields[el.id] = el.value;
+      }
+    });
+
+    document.querySelectorAll('.side').forEach((el, idx)=>{
+      if(el.checked) draft.sideEffects.push(el.value || String(idx));
+    });
+
+    try{
+      if(typeof vals !== 'undefined'){
+        Object.keys(vals).forEach(k=>draft.sliders[k] = vals[k]);
+      }
+    }catch(e){}
+
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  }
+
+  function restoreDraft(){
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if(!raw) return;
+
+    let draft;
+    try { draft = JSON.parse(raw); } catch(e){ return; }
+
+    if(draft.sliders && typeof vals !== 'undefined'){
+      Object.keys(draft.sliders).forEach(k=>{
+        vals[k] = Number(draft.sliders[k]);
+        const slider = document.getElementById(k);
+        const label = document.getElementById(k + 'Val');
+        if(slider) slider.value = vals[k];
+        if(label) label.textContent = vals[k];
+      });
+    }
+
+    if(draft.fields){
+      Object.entries(draft.fields).forEach(([id, value])=>{
+        const el = document.getElementById(id);
+        if(!el) return;
+        if(el.type === 'checkbox') el.checked = value === true || value === 'true';
+        else el.value = value;
+      });
+    }
+
+    if(Array.isArray(draft.sideEffects)){
+      document.querySelectorAll('.side').forEach(el=>{
+        el.checked = draft.sideEffects.includes(el.value);
+      });
+    }
+
+    try{ if(typeof render === 'function') render(); }catch(e){}
+  }
+
+  function wire(){
+    allFields().forEach(el=>{
+      ['input','change','click','blur'].forEach(evt=>{
+        el.addEventListener(evt, saveDraft, {passive:true});
+      });
+    });
+
+    document.querySelectorAll('.side').forEach(el=>{
+      el.addEventListener('change', saveDraft, {passive:true});
+      el.addEventListener('click', saveDraft, {passive:true});
+    });
+
+    const clearDraftBtn = document.getElementById('clearDraftBtn');
+    if(clearDraftBtn){
+      clearDraftBtn.onclick = function(){
+        if(confirm('Clear current draft only?')){
+          localStorage.removeItem(DRAFT_KEY);
+          try{ if(typeof clearFormState === 'function') clearFormState(); }catch(e){}
+          location.reload();
+        }
+      };
+    }
+
+    const clearBtn = document.getElementById('clearBtn');
+    if(clearBtn){
+      const oldClear = clearBtn.onclick;
+      clearBtn.onclick = function(){
+        if(confirm('Clear all data?')){
+          localStorage.removeItem(DRAFT_KEY);
+          try{ localStorage.removeItem(KEY); }catch(e){}
+          try{ if(typeof FORMKEY !== 'undefined') localStorage.removeItem(FORMKEY); }catch(e){}
+          location.reload();
+        }
+      };
+    }
+  }
+
+  window.focusOSSaveDraftNow = saveDraft;
+  window.focusOSRestoreDraftNow = restoreDraft;
+
+  setTimeout(()=>{ restoreDraft(); wire(); saveDraft(); }, 100);
+  setTimeout(()=>{ restoreDraft(); wire(); }, 500);
+  setTimeout(restoreDraft, 1200);
+
+  document.addEventListener('visibilitychange', ()=>{ if(document.hidden) saveDraft(); });
+  window.addEventListener('pagehide', saveDraft);
+  window.addEventListener('beforeunload', saveDraft);
+})();
+</script>
+
 </body>
 </html>
