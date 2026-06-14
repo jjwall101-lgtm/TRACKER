@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>FocusOS ADHD Companion V1.3</title>
+<title>FocusOS ADHD Companion V1.4</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <meta name="theme-color" content="#151210">
@@ -109,18 +109,19 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px
 
 <div id="page-insights" class="page">
  <div class="card"><h2>Patterns</h2><div id="insights"></div></div>
- <div class="card"><h2>Clinician report</h2><button id="reportBtn">Generate report</button><pre id="report"></pre></div>
+ <div class="card"><h2>Clinician report</h2><button id="reportBtn">Generate report</button><button id="saveReportBtn">Save report</button><pre id="report"></pre></div>
+ <div class="card"><h2>Saved reports</h2><p class="muted">Reports are saved on this device and included in backups.</p><div id="savedReports"></div></div>
 </div>
 
 <div id="page-settings" class="page">
- <div class="card"><h2>Settings</h2><div class="explain"><b>Saving</b>Daily entries, titration phases and the current draft are saved on this device using browser storage. Export a backup before changing phones or clearing browser data.</div><label>Theme<select id="theme"><option value="light">Light</option><option value="dark">Dark</option><option value="amoled">AMOLED</option></select></label><button id="saveSettingsBtn">Save settings</button><button id="importBtn">Import backup</button><input id="importFile" type="file" accept=".json"><button id="clearDraftBtn">Clear current draft only</button><button class="danger" id="clearBtn">Clear all data</button></div>
+ <div class="card"><h2>Settings</h2><div class="explain"><b>Saving</b>Daily entries, titration phases, saved clinician reports and the current draft are saved on this device using browser storage. Export a backup before changing phones or clearing browser data.</div><label>Theme<select id="theme"><option value="light">Light</option><option value="dark">Dark</option><option value="amoled">AMOLED</option></select></label><button id="saveSettingsBtn">Save settings</button><button id="importBtn">Import backup</button><input id="importFile" type="file" accept=".json"><button id="clearDraftBtn">Clear current draft only</button><button class="danger" id="clearBtn">Clear all data</button></div>
 </div>
 </main>
 
 <script>
 const $=id=>document.getElementById(id);
 const KEY='adhdFocusOSv1';
-let db=JSON.parse(localStorage.getItem(KEY)||'{"entries":[],"titration":[],"settings":{"theme":"light"}}'); if(!db.titration)db.titration=[];
+let db=JSON.parse(localStorage.getItem(KEY)||'{"entries":[],"titration":[],"reports":[],"settings":{"theme":"light"}}'); if(!db.titration)db.titration=[]; if(!db.reports)db.reports=[];
 const FORMKEY='focusOSFormStateV13';
 function saveFormState(){
   const data={vals:{...vals},fields:{}};
@@ -168,7 +169,7 @@ html('sleepExplain','<b>Sleep score '+e.sleep.score+'/100</b>Duration up to 50 p
 html('focusExplain','<b>Focus readiness</b>Uses executive function, medication score, sleep score and mood. This is for work capacity, not diagnosis.');
 html('plan',plan(e).map(x=>'<div class="insight">'+x+'</div>').join(''));
 html('history',db.entries.slice(-5).reverse().map(x=>'<div class="entry"><b>'+new Date(x.date).toLocaleString('en-GB')+' · '+x.daily+'/100</b>ADHD '+x.adhd.score+' · Med '+x.med.score+' · Sleep '+x.sleep.score+'</div>').join('')||'<p class="muted">No entries yet.</p>');
-html('insights',patterns());renderTitration();}
+html('insights',patterns());renderTitration();renderSavedReports();}
 function patterns(){if(db.entries.length<3)return'<div class="insight">Save at least 3 entries to start seeing patterns.</div>';let crash=db.entries.filter(e=>e.crashTime);let out=[];if(crash.length)out.push('Average crash severity: '+avg(crash.map(e=>e.crashSeverity)).toFixed(1)+'/10');out.push('Average ADHD score: '+avg(db.entries.map(e=>e.adhd.score)).toFixed(1)+'/100');return out.map(x=>'<div class="insight">'+x+'</div>').join('')}
 
 function renderTitration(){
@@ -203,9 +204,45 @@ function titrationReport(){
   }).join('\n');
   return weightLine+'\n'+phases;
 }
+
+function saveClinicianReport(){
+  if(!db.reports) db.reports=[];
+  let text = $('report') && $('report').textContent ? $('report').textContent : report();
+  let title = 'Clinician report - ' + new Date().toLocaleString('en-GB');
+  db.reports.push({title:title,date:new Date().toISOString(),text:text});
+  save();
+  alert('Report saved');
+}
+function renderSavedReports(){
+  if(!db.reports) db.reports=[];
+  html('savedReports', db.reports.slice().reverse().map((r,idx)=>{
+    let realIndex=db.reports.length-1-idx;
+    return '<div class="entry"><b>'+r.title+'</b><button type="button" onclick="loadSavedReport('+realIndex+')">Open report</button><button type="button" class="secondary" onclick="downloadSavedReport('+realIndex+')">Download</button><button type="button" class="danger" onclick="deleteSavedReport('+realIndex+')">Delete</button></div>';
+  }).join('') || '<p class="muted">No saved reports yet.</p>');
+}
+window.loadSavedReport=function(i){
+  if(!db.reports || !db.reports[i]) return;
+  html('report', db.reports[i].text);
+}
+window.downloadSavedReport=function(i){
+  if(!db.reports || !db.reports[i]) return;
+  let blob=new Blob([db.reports[i].text],{type:'text/plain'});
+  let a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(db.reports[i].title||'clinician-report').replaceAll(' ','-').replaceAll('/','-').replaceAll(':','-')+'.txt';
+  a.click();
+}
+window.deleteSavedReport=function(i){
+  if(!db.reports || !db.reports[i]) return;
+  if(confirm('Delete this saved report?')){
+    db.reports.splice(i,1);
+    save();
+  }
+}
+
 function report(){let es=db.entries;return 'FOCUSOS ADHD TITRATION REPORT\\n\\nEntries: '+es.length+'\\nAverage ADHD: '+(es.length?avg(es.map(e=>e.adhd.score)).toFixed(1):'--')+'\\nAverage Medication: '+(es.length?avg(es.map(e=>e.med.score)).toFixed(1):'--')+'\\nAverage Sleep: '+(es.length?avg(es.map(e=>e.sleep.score)).toFixed(1):'--')+'\\n\\nTITRATION TIMELINE\\n'+titrationReport()+'\\n\\nRecent notes included in saved entries.'}
 function show(page){document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$('page-'+page).classList.add('active');scrollTo(0,0)}
-function init(){set('todayTitle',new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}));loadFormState();sliders(adhd,'adhdSliders');sliders(mood,'moodSliders'); if($('titStart'))$('titStart').value=new Date().toISOString().slice(0,10);if(db.settings.theme)document.body.classList.add(db.settings.theme);document.querySelectorAll('input,select,textarea').forEach(el=>{el.addEventListener('input',()=>{saveFormState();render()});el.addEventListener('change',()=>{saveFormState();render()})});$('tabs').onclick=e=>{let b=e.target.closest('[data-page]');if(b)show(b.dataset.page)};$('saveBtn').onclick=()=>{db.entries.push(current());saveFormState();save();set('saveStatus','Entry saved. Draft remains saved on this device.');alert('Entry saved')}; if($('saveTitrationBtn'))$('saveTitrationBtn').onclick=saveTitration;$('reportBtn').onclick=()=>html('report',report());$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-focus-os-backup.json';a.click()};$('exportJsonBtn').onclick=$('exportBtn').onclick;$('saveSettingsBtn').onclick=()=>{db.settings.theme=s('theme');localStorage.setItem(KEY,JSON.stringify(db));location.reload()};$('clearDraftBtn').onclick=()=>{if(confirm('Clear current unsaved draft?')){clearFormState();location.reload()}};$('clearBtn').onclick=()=>{if(confirm('Clear all data?')){localStorage.removeItem(KEY);clearFormState();location.reload()}};render()}
+function init(){set('todayTitle',new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}));loadFormState();sliders(adhd,'adhdSliders');sliders(mood,'moodSliders'); if($('titStart'))$('titStart').value=new Date().toISOString().slice(0,10);if(db.settings.theme)document.body.classList.add(db.settings.theme);document.querySelectorAll('input,select,textarea').forEach(el=>{el.addEventListener('input',()=>{saveFormState();render()});el.addEventListener('change',()=>{saveFormState();render()})});$('tabs').onclick=e=>{let b=e.target.closest('[data-page]');if(b)show(b.dataset.page)};$('saveBtn').onclick=()=>{db.entries.push(current());saveFormState();save();set('saveStatus','Entry saved. Draft remains saved on this device.');alert('Entry saved')}; if($('saveTitrationBtn'))$('saveTitrationBtn').onclick=saveTitration;$('reportBtn').onclick=()=>html('report',report()); if($('saveReportBtn'))$('saveReportBtn').onclick=saveClinicianReport;$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-focus-os-backup.json';a.click()};$('exportJsonBtn').onclick=$('exportBtn').onclick;$('saveSettingsBtn').onclick=()=>{db.settings.theme=s('theme');localStorage.setItem(KEY,JSON.stringify(db));location.reload()};$('clearDraftBtn').onclick=()=>{if(confirm('Clear current unsaved draft?')){clearFormState();location.reload()}};$('clearBtn').onclick=()=>{if(confirm('Clear all data?')){localStorage.removeItem(KEY);clearFormState();location.reload()}};render()}
 init();
 </script>
 </body>
