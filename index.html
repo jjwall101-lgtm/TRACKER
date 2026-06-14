@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>FocusOS ADHD Companion V1.6</title>
+<title>FocusOS ADHD Companion V1.6.2</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <meta name="theme-color" content="#151210">
@@ -69,7 +69,7 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px
   <div class="checks">
    <label><input type="checkbox" class="side" value="Appetite suppression"> Appetite suppression</label><label><input type="checkbox" class="side" value="Headache"> Headache</label><label><input type="checkbox" class="side" value="Anxiety"> Anxiety</label><label><input type="checkbox" class="side" value="Irritability"> Irritability</label><label><input type="checkbox" class="side" value="Sleep affected"> Sleep affected</label><label><input type="checkbox" class="side" value="Heart rate noticeable"> Heart rate noticeable</label>
   </div>
-  <h2>Functional impact</h2><div class="grid two"><label>Work/function /10 <input id="workFunction" type="number" min="0" max="10" value="5"></label><label>Home tasks /10 <input id="homeFunction" type="number" min="0" max="10" value="5"></label><label>Family/emotional impact /10 <input id="familyFunction" type="number" min="0" max="10" value="5"></label></div><div class="explain"><b>Medication reminder</b>Set a reminder time, then press Enable Medication Reminder. The web app must be opened at least occasionally for browser notifications to work reliably.</div><button id="enableReminderBtn" type="button">Enable Medication Reminder</button><button id="testReminderBtn" type="button" class="secondary">Test Notification</button><div id="reminderStatus" class="explain"></div><div id="medExplain" class="explain"></div>
+  <h2>Functional impact</h2><div class="grid two"><label>Work/function /10 <input id="workFunction" type="number" min="0" max="10" value="5"></label><label>Home tasks /10 <input id="homeFunction" type="number" min="0" max="10" value="5"></label><label>Family/emotional impact /10 <input id="familyFunction" type="number" min="0" max="10" value="5"></label></div><div class="explain"><b>Medication reminder</b>Set a reminder time, then press Enable Medication Reminder. On Android/Chrome, notifications require site permission and may only be reliable while the PWA/site is allowed to send notifications.</div><button id="enableReminderBtn" type="button">Enable Medication Reminder</button><input id="testReminderBtn" type="button" class="secondary" value="Test Notification" style="font-weight:850;text-align:center;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;"><div id="reminderStatus" class="explain"></div><div id="medExplain" class="explain"></div>
  </div>
 </div>
 
@@ -353,7 +353,7 @@ if($('doseReportBtn'))$('doseReportBtn').onclick=()=>html('report',doseCompariso
 if($('saveReportBtn'))$('saveReportBtn').onclick=saveClinicianReport; if($('saveTitrationBtn'))$('saveTitrationBtn').onclick=saveTitration;$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-focus-os-backup.json';a.click()};if($('exportJsonBtn'))$('exportJsonBtn').onclick=$('exportBtn').onclick;$('importBtn').onclick=()=>{let f=$('importFile').files[0];if(!f)return alert('Choose a backup file first');let r=new FileReader();r.onload=e=>{db=JSON.parse(e.target.result);if(!db.titration)db.titration=[];if(!db.reports)db.reports=[];localStorage.setItem(KEY,JSON.stringify(db));alert('Backup imported');location.reload()};r.readAsText(f)};$('saveSettingsBtn').onclick=()=>{if(!db.settings)db.settings={};db.settings.theme=s('theme')||'light';localStorage.setItem(KEY,JSON.stringify(db));document.body.classList.remove('dark','amoled');if(db.settings.theme==='dark')document.body.classList.add('dark');if(db.settings.theme==='amoled')document.body.classList.add('amoled');alert('Settings saved')};$('clearDraftBtn').onclick=()=>{if(confirm('Clear current unsaved draft?')){clearFormState();localStorage.removeItem('focusOSFullDraftV153');location.reload()}};$('clearBtn').onclick=()=>{if(confirm('Clear all data?')){localStorage.removeItem(KEY);clearFormState();localStorage.removeItem('focusOSFullDraftV153');location.reload()}};render()}
 init();
 
-/* V1.6 button safety patch */
+/* V1.6.2 button safety patch */
 (function(){
   function q(id){return document.getElementById(id)}
   function saveStore(){
@@ -422,7 +422,7 @@ init();
 })();
 
 
-/* V1.6 full draft autosave patch */
+/* V1.6.2 full draft autosave patch */
 (function(){
   const DRAFT_KEY = 'focusOSFullDraftV153';
   function q(id){return document.getElementById(id)}
@@ -489,7 +489,7 @@ init();
 </script>
 
 <script>
-/* V1.6 persistent draft fix */
+/* V1.6.2 persistent draft fix */
 (function(){
   const DRAFT_KEY = 'FocusOS_v154_full_draft';
 
@@ -609,7 +609,7 @@ init();
 
 
 <script>
-/* V1.6 medication reminder notifications */
+/* V1.6.2 medication reminder notifications */
 (function(){
   const REMINDER_KEY = 'FocusOS_v16_med_reminder';
   let reminderTimer = null;
@@ -719,6 +719,275 @@ init();
     });
     restoreReminderUI();
   },150);
+})();
+</script>
+
+
+<script>
+/* V1.6.2 medication notification fix */
+(function(){
+  const REMINDER_KEY = 'FocusOS_v161_med_reminder';
+  let reminderTimer = null;
+
+  function q(id){return document.getElementById(id)}
+  function status(msg){
+    const el=q('reminderStatus');
+    if(el) el.innerHTML='<b>Reminder status</b><br>'+msg;
+  }
+  function getReminder(){
+    try{return JSON.parse(localStorage.getItem(REMINDER_KEY)||'{}')}catch(e){return {}}
+  }
+  function setReminder(data){
+    localStorage.setItem(REMINDER_KEY, JSON.stringify(data));
+  }
+  function notificationSupportText(){
+    if(!('Notification' in window)) return 'Notifications are not supported in this browser.';
+    return 'Notification permission: '+Notification.permission;
+  }
+  async function ensurePermission(){
+    if(!('Notification' in window)){
+      status('Notifications are not supported in this browser. The app will use an on-screen alert instead.');
+      return false;
+    }
+    if(Notification.permission === 'granted') return true;
+    if(Notification.permission === 'denied'){
+      status('Notifications are blocked. In Chrome: site settings → notifications → allow for this site.');
+      return false;
+    }
+    const permission = await Notification.requestPermission();
+    status('Permission result: '+permission);
+    return permission === 'granted';
+  }
+  async function showNotification(title, body){
+    const allowed = await ensurePermission();
+    if(!allowed){
+      alert(title + '\n\n' + body);
+      return;
+    }
+
+    // Use direct Notification first because it is the most reliable for immediate tests on Chrome.
+    try{
+      new Notification(title, {body: body, icon: 'icon.svg', badge: 'icon.svg'});
+      status('Test notification sent. If you did not see it, check Android/Chrome notification permission for this site.');
+      return;
+    }catch(e){}
+
+    // Fallback to service worker notification if direct fails.
+    try{
+      if('serviceWorker' in navigator){
+        const reg = await navigator.serviceWorker.ready;
+        await reg.showNotification(title, {body: body, icon: 'icon.svg', badge: 'icon.svg'});
+        status('Notification sent via service worker.');
+        return;
+      }
+    }catch(e){}
+
+    alert(title + '\n\n' + body);
+  }
+  function msUntil(time){
+    if(!time) return null;
+    const p=time.split(':').map(Number);
+    if(p.length<2 || Number.isNaN(p[0]) || Number.isNaN(p[1])) return null;
+    const now=new Date();
+    const target=new Date();
+    target.setHours(p[0],p[1],0,0);
+    if(target<=now) target.setDate(target.getDate()+1);
+    return target-now;
+  }
+  function scheduleReminder(){
+    if(reminderTimer) clearTimeout(reminderTimer);
+    const r=getReminder();
+    if(!r.enabled || !r.time){
+      status('No active medication reminder.<br>'+notificationSupportText());
+      return;
+    }
+    const delay=msUntil(r.time);
+    if(delay===null){
+      status('Reminder time not set correctly.');
+      return;
+    }
+    const mins=Math.max(1,Math.round(delay/60000));
+    status('Active. Next reminder at '+r.time+' in about '+mins+' minutes.<br>'+notificationSupportText());
+    reminderTimer=setTimeout(async ()=>{
+      const med=(q('medName')&&q('medName').value) || r.med || 'medication';
+      const dose=(q('dose')&&q('dose').value) || r.dose || '';
+      await showNotification('FocusOS medication reminder','Time to take '+med+(dose?' '+dose:'')+'.');
+      scheduleReminder();
+    }, delay);
+  }
+  async function enableReminder(){
+    const time=(q('reminderTime')&&q('reminderTime').value) || (q('medTime')&&q('medTime').value);
+    if(!time){
+      alert('Set a medication reminder time first.');
+      return;
+    }
+    await ensurePermission();
+    setReminder({
+      enabled:true,
+      time:time,
+      med:(q('medName')&&q('medName').value)||'',
+      dose:(q('dose')&&q('dose').value)||'',
+      updatedAt:new Date().toISOString()
+    });
+    scheduleReminder();
+    alert('Medication reminder enabled for '+time);
+  }
+  async function testReminder(){
+    status('Sending test notification...<br>'+notificationSupportText());
+    await showNotification('FocusOS test notification','This is your medication reminder test.');
+  }
+  function restoreReminderUI(){
+    const r=getReminder();
+    if(r.time && q('reminderTime')) q('reminderTime').value=r.time;
+    scheduleReminder();
+  }
+  function wire(){
+    if(q('enableReminderBtn')) q('enableReminderBtn').onclick=enableReminder;
+    if(q('testReminderBtn')) q('testReminderBtn').onclick=testReminder;
+    if(q('reminderTime')){
+      q('reminderTime').addEventListener('change',()=>{
+        const r=getReminder();
+        r.time=q('reminderTime').value;
+        r.enabled=!!r.time;
+        setReminder(r);
+        scheduleReminder();
+      });
+    }
+    restoreReminderUI();
+  }
+  setTimeout(wire,150);
+  setTimeout(wire,700);
+})();
+</script>
+
+
+<script>
+/* V1.6.2 test button tap fix */
+(function(){
+  const REMINDER_KEY = 'FocusOS_v162_med_reminder';
+  let timer=null;
+
+  function q(id){return document.getElementById(id)}
+  function status(msg){
+    const el=q('reminderStatus');
+    if(el) el.innerHTML='<b>Reminder status</b><br>'+msg;
+  }
+  async function askPermission(){
+    if(!('Notification' in window)){
+      status('Notifications are not supported here. Alert fallback will be used.');
+      return false;
+    }
+    if(Notification.permission === 'granted') return true;
+    if(Notification.permission === 'denied'){
+      status('Notifications are blocked for this site in Chrome/Android settings.');
+      return false;
+    }
+    const result = await Notification.requestPermission();
+    status('Notification permission: '+result);
+    return result === 'granted';
+  }
+  async function sendTest(){
+    status('Test button pressed. Sending test notification...');
+    const ok = await askPermission();
+    if(!ok){
+      alert('FocusOS test notification\n\nNotifications are not allowed, so this alert confirms the button works.');
+      return;
+    }
+    try{
+      new Notification('FocusOS test notification', {
+        body:'This is your medication reminder test.',
+        icon:'icon.svg',
+        badge:'icon.svg'
+      });
+      status('Test notification sent. If nothing appears, Android is blocking Chrome/PWA notifications.');
+    }catch(e){
+      alert('FocusOS test notification\n\nButton works, but browser notification failed.');
+      status('Button works, but notification failed: '+e.message);
+    }
+  }
+  function msUntil(time){
+    if(!time) return null;
+    const p=time.split(':').map(Number);
+    if(p.length<2 || Number.isNaN(p[0]) || Number.isNaN(p[1])) return null;
+    const now=new Date();
+    const target=new Date();
+    target.setHours(p[0],p[1],0,0);
+    if(target<=now) target.setDate(target.getDate()+1);
+    return target-now;
+  }
+  function schedule(){
+    if(timer) clearTimeout(timer);
+    let r={};
+    try{r=JSON.parse(localStorage.getItem(REMINDER_KEY)||'{}')}catch(e){}
+    if(r.time && q('reminderTime')) q('reminderTime').value=r.time;
+    if(!r.enabled || !r.time){
+      status('No active medication reminder.');
+      return;
+    }
+    const delay=msUntil(r.time);
+    if(delay===null){
+      status('Reminder time not valid.');
+      return;
+    }
+    status('Active. Next reminder at '+r.time+' in about '+Math.max(1,Math.round(delay/60000))+' minutes.');
+    timer=setTimeout(async ()=>{
+      const med=(q('medName')&&q('medName').value)||r.med||'medication';
+      const dose=(q('dose')&&q('dose').value)||r.dose||'';
+      const ok=await askPermission();
+      if(ok){
+        try{ new Notification('FocusOS medication reminder',{body:'Time to take '+med+(dose?' '+dose:'')+'.', icon:'icon.svg'}); }
+        catch(e){ alert('Time to take '+med+(dose?' '+dose:'')+'.'); }
+      }else{
+        alert('Time to take '+med+(dose?' '+dose:'')+'.');
+      }
+      schedule();
+    }, delay);
+  }
+  async function enable(){
+    status('Enable button pressed.');
+    const time=(q('reminderTime')&&q('reminderTime').value)||(q('medTime')&&q('medTime').value);
+    if(!time){
+      alert('Set a medication reminder time first.');
+      return;
+    }
+    await askPermission();
+    localStorage.setItem(REMINDER_KEY, JSON.stringify({
+      enabled:true,
+      time:time,
+      med:(q('medName')&&q('medName').value)||'',
+      dose:(q('dose')&&q('dose').value)||'',
+      updatedAt:new Date().toISOString()
+    }));
+    schedule();
+    alert('Medication reminder enabled for '+time);
+  }
+  function wire(){
+    const test=q('testReminderBtn');
+    const enableBtn=q('enableReminderBtn');
+
+    if(test){
+      test.onclick = sendTest;
+      test.ontouchend = function(e){ e.preventDefault(); sendTest(); };
+      test.onpointerup = function(e){ e.preventDefault(); sendTest(); };
+    }
+    if(enableBtn){
+      enableBtn.onclick = enable;
+      enableBtn.ontouchend = function(e){ e.preventDefault(); enable(); };
+    }
+    if(q('reminderTime')){
+      q('reminderTime').onchange=function(){
+        let r={};
+        try{r=JSON.parse(localStorage.getItem(REMINDER_KEY)||'{}')}catch(e){}
+        r.time=q('reminderTime').value;
+        r.enabled=!!r.time;
+        localStorage.setItem(REMINDER_KEY, JSON.stringify(r));
+        schedule();
+      };
+    }
+    schedule();
+  }
+  setTimeout(wire,100);
+  setTimeout(wire,500);
 })();
 </script>
 
