@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>FocusOS ADHD Companion V1.5.2</title>
+<title>FocusOS ADHD Companion V1.5.3</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <meta name="theme-color" content="#151210">
@@ -350,10 +350,10 @@ function show(page){document.querySelectorAll('[data-page]').forEach(b=>b.classL
 function init(){set('todayTitle',new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}));loadFormState();sliders(adhd,'adhdSliders');sliders(mood,'moodSliders'); if($('titStart'))$('titStart').value=new Date().toISOString().slice(0,10);if(db.settings.theme)document.body.classList.add(db.settings.theme);document.querySelectorAll('input,select,textarea').forEach(el=>{el.addEventListener('input',()=>{saveFormState();render()});el.addEventListener('change',()=>{saveFormState();render()})});$('tabs').onclick=e=>{let b=e.target.closest('[data-page]');if(b)show(b.dataset.page)};$('saveBtn').onclick=()=>{db.entries.push(current());saveFormState();save();set('saveStatus','Entry saved. Draft remains saved on this device.');alert('Entry saved')};if($('quickReportBtn'))$('quickReportBtn').onclick=()=>html('report',quickReport());
 if($('fullReportBtn'))$('fullReportBtn').onclick=()=>html('report',fullReport());
 if($('doseReportBtn'))$('doseReportBtn').onclick=()=>html('report',doseComparisonReport());
-if($('saveReportBtn'))$('saveReportBtn').onclick=saveClinicianReport; if($('saveTitrationBtn'))$('saveTitrationBtn').onclick=saveTitration;$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-focus-os-backup.json';a.click()};if($('exportJsonBtn'))$('exportJsonBtn').onclick=$('exportBtn').onclick;$('importBtn').onclick=()=>{let f=$('importFile').files[0];if(!f)return alert('Choose a backup file first');let r=new FileReader();r.onload=e=>{db=JSON.parse(e.target.result);if(!db.titration)db.titration=[];if(!db.reports)db.reports=[];localStorage.setItem(KEY,JSON.stringify(db));alert('Backup imported');location.reload()};r.readAsText(f)};$('saveSettingsBtn').onclick=()=>{if(!db.settings)db.settings={};db.settings.theme=s('theme')||'light';localStorage.setItem(KEY,JSON.stringify(db));document.body.classList.remove('dark','amoled');if(db.settings.theme==='dark')document.body.classList.add('dark');if(db.settings.theme==='amoled')document.body.classList.add('amoled');alert('Settings saved')};$('clearDraftBtn').onclick=()=>{if(confirm('Clear current unsaved draft?')){clearFormState();location.reload()}};$('clearBtn').onclick=()=>{if(confirm('Clear all data?')){localStorage.removeItem(KEY);clearFormState();location.reload()}};render()}
+if($('saveReportBtn'))$('saveReportBtn').onclick=saveClinicianReport; if($('saveTitrationBtn'))$('saveTitrationBtn').onclick=saveTitration;$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-focus-os-backup.json';a.click()};if($('exportJsonBtn'))$('exportJsonBtn').onclick=$('exportBtn').onclick;$('importBtn').onclick=()=>{let f=$('importFile').files[0];if(!f)return alert('Choose a backup file first');let r=new FileReader();r.onload=e=>{db=JSON.parse(e.target.result);if(!db.titration)db.titration=[];if(!db.reports)db.reports=[];localStorage.setItem(KEY,JSON.stringify(db));alert('Backup imported');location.reload()};r.readAsText(f)};$('saveSettingsBtn').onclick=()=>{if(!db.settings)db.settings={};db.settings.theme=s('theme')||'light';localStorage.setItem(KEY,JSON.stringify(db));document.body.classList.remove('dark','amoled');if(db.settings.theme==='dark')document.body.classList.add('dark');if(db.settings.theme==='amoled')document.body.classList.add('amoled');alert('Settings saved')};$('clearDraftBtn').onclick=()=>{if(confirm('Clear current unsaved draft?')){clearFormState();localStorage.removeItem('focusOSFullDraftV153');location.reload()}};$('clearBtn').onclick=()=>{if(confirm('Clear all data?')){localStorage.removeItem(KEY);clearFormState();localStorage.removeItem('focusOSFullDraftV153');location.reload()}};render()}
 init();
 
-/* V1.5.2 button safety patch */
+/* V1.5.3 button safety patch */
 (function(){
   function q(id){return document.getElementById(id)}
   function saveStore(){
@@ -419,6 +419,71 @@ init();
   }
   wireButtons();
   setTimeout(wireButtons,100);
+})();
+
+
+/* V1.5.3 full draft autosave patch */
+(function(){
+  const DRAFT_KEY = 'focusOSFullDraftV153';
+  function q(id){return document.getElementById(id)}
+  function collectDraft(){
+    const fields = {};
+    document.querySelectorAll('input,select,textarea').forEach(el=>{
+      if(!el.id) return;
+      if(el.type === 'checkbox') fields[el.id] = !!el.checked;
+      else fields[el.id] = el.value;
+    });
+    const sliderVals = {};
+    try{
+      if(typeof vals !== 'undefined'){
+        Object.keys(vals).forEach(k=>sliderVals[k]=vals[k]);
+      }
+    }catch(e){}
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({fields, vals: sliderVals, savedAt: new Date().toISOString()}));
+  }
+  function restoreDraft(){
+    try{
+      const data = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}');
+      if(data.vals && typeof vals !== 'undefined'){
+        Object.keys(data.vals).forEach(k=>{ vals[k] = data.vals[k]; });
+      }
+      if(data.fields){
+        Object.entries(data.fields).forEach(([id,value])=>{
+          const el = q(id);
+          if(!el) return;
+          if(el.type === 'checkbox') el.checked = !!value;
+          else el.value = value;
+        });
+      }
+      if(typeof render === 'function') render();
+    }catch(e){}
+  }
+  function wireAutosave(){
+    document.querySelectorAll('input,select,textarea').forEach(el=>{
+      el.addEventListener('input', collectDraft);
+      el.addEventListener('change', collectDraft);
+      el.addEventListener('click', collectDraft);
+    });
+    document.querySelectorAll('input[type="range"]').forEach(el=>{
+      el.addEventListener('input', function(){
+        if(typeof vals !== 'undefined' && el.id) vals[el.id] = Number(el.value);
+        collectDraft();
+      });
+    });
+  }
+  setTimeout(()=>{restoreDraft(); wireAutosave(); collectDraft();}, 50);
+  setTimeout(()=>{restoreDraft(); wireAutosave();}, 500);
+  setTimeout(()=>{restoreDraft();}, 1200);
+
+  const oldClear = window.clearFocusOSDraft;
+  window.clearFocusOSDraft = function(){
+    localStorage.removeItem(DRAFT_KEY);
+    try{ if(typeof clearFormState === 'function') clearFormState(); }catch(e){}
+    if(oldClear) oldClear();
+  };
+
+  document.addEventListener('visibilitychange', ()=>{ if(document.hidden) collectDraft(); });
+  window.addEventListener('beforeunload', collectDraft);
 })();
 
 </script>
