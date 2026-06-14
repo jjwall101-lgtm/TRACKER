@@ -1,11 +1,11 @@
 {
-  "name": "ADHD Health OS V4.4",
-  "short_name": "ADHD OS V4.4",
+  "name": "ADHD Focus OS",
+  "short_name": "ADHD Focus",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f3eee7",
-  "theme_color": "#171412",
+  "background_color": "#f4efe8",
+  "theme_color": "#151210",
   "orientation": "portrait",
   "icons": [
     {

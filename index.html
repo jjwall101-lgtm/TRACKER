@@ -3,270 +3,131 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ADHD Health OS V4.4</title>
+<title>ADHD Focus OS</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
-<meta name="theme-color" content="#171412">
+<meta name="theme-color" content="#151210">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{--bg:#f3eee7;--card:#fffaf4;--ink:#171412;--muted:#766b61;--soft:#eadfd3;--accent:#9c7754;--danger:#7b241f;--ok:#2e7d32;--warn:#ef6c00;--bad:#b71c1c}
+:root{--bg:#f4efe8;--card:#fffaf4;--ink:#151210;--muted:#72685f;--soft:#eadfd3;--accent:#a47a50;--bad:#b71c1c;--warn:#ef6c00;--ok:#2e7d32}
+body.dark{--bg:#111;--card:#1b1714;--ink:#f8f1e9;--muted:#b7aba0;--soft:#302820}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:14px}
-body.dark{--bg:#12100f;--card:#1d1916;--ink:#f8f1e9;--muted:#b7aa9e;--soft:#332b25}
-body.amoled{--bg:#000;--card:#101010;--ink:#fff;--muted:#aaa;--soft:#222}
-body.ocean{--accent:#4f7cac;--soft:#d9e8f4}body.forest{--accent:#4f7f5f;--soft:#dce8dd}body.plum{--accent:#845a7c;--soft:#eadce8}
-.app{max-width:980px;margin:auto;padding-bottom:40px}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.brand{display:flex;gap:12px;align-items:center}.logo{width:48px;height:48px;border-radius:14px}.eyebrow{margin:0;color:var(--muted);font-weight:900;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase}h1{margin:2px 0 0;font-size:1.55rem}h2{margin:0 0 14px}h3{margin:18px 0 8px}
-button{border:0;border-radius:16px;background:var(--ink);color:var(--bg);padding:13px 15px;font-weight:850;width:100%;margin-top:12px}.top button{width:auto;margin:0}.danger{background:var(--danger);color:white}.ghost,.secondary{background:var(--card);border:1px solid var(--soft);color:var(--ink)}
-.hero{display:flex;justify-content:space-between;gap:12px;align-items:center;background:linear-gradient(135deg,var(--card),var(--soft));border-radius:28px;padding:18px;margin:12px 0}.hero p{margin:0;color:var(--muted);font-weight:800}.hero h2{font-size:1.18rem;margin:4px 0 0}.scoreCircle{width:92px;height:92px;border-radius:50%;background:var(--ink);color:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}.scoreCircle span{font-size:1.7rem;font-weight:950}.scoreCircle.low{background:var(--ok)}.scoreCircle.med{background:var(--warn)}.scoreCircle.high{background:var(--bad)}
-.tabs{display:flex;gap:8px;overflow-x:auto;position:sticky;top:0;background:var(--bg);z-index:10;padding:8px 0 10px}.tabs button{white-space:nowrap;width:auto;margin:0;background:var(--card);color:var(--muted);border:1px solid var(--soft);border-radius:999px;padding:10px 14px}.tabs button.active{background:var(--ink);color:var(--bg)}
-.page{display:none}.page.active{display:block}.card{background:var(--card);border-radius:24px;padding:16px;margin:12px 0;box-shadow:0 8px 22px rgba(40,28,18,.06);border:1px solid var(--soft)}.cardHead{display:flex;align-items:center;justify-content:space-between;gap:8px}.pill{border-radius:999px;padding:6px 10px;background:var(--soft);font-weight:900;color:var(--ink);font-size:.8rem}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.grid.two{grid-template-columns:1fr 1fr}.stat,.mini{background:var(--bg);border:1px solid var(--soft);border-radius:18px;padding:12px}.stat b{display:block;font-size:1.55rem}.stat span,.mini span,.muted{color:var(--muted);font-weight:750}.mini b{display:block;font-size:1.1rem}
-label{display:block;color:var(--muted);font-weight:850;margin:12px 0}input,select{width:100%;padding:12px;border-radius:14px;border:1px solid var(--soft);margin-top:6px;font:inherit;background:var(--bg);color:var(--ink)}
+.app{max-width:900px;margin:auto;padding-bottom:40px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.brand{display:flex;gap:12px;align-items:center}.logo{width:48px;height:48px;border-radius:14px}.eyebrow{margin:0;color:var(--muted);font-weight:900;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase}h1{margin:2px 0 0;font-size:1.5rem}h2{margin:0 0 14px}
+button{border:0;border-radius:16px;background:var(--ink);color:var(--bg);padding:13px 15px;font-weight:850;width:100%;margin-top:12px}.top button,.tabs button{width:auto;margin:0}.ghost,.secondary{background:var(--card);border:1px solid var(--soft);color:var(--ink)}.danger{background:var(--bad);color:white}
+.hero{display:flex;justify-content:space-between;gap:12px;align-items:center;background:linear-gradient(135deg,var(--card),var(--soft));border-radius:28px;padding:18px;margin:12px 0}.hero p{margin:0;color:var(--muted);font-weight:800}.hero h2{font-size:1.15rem;margin:4px 0 0}.scoreCircle{width:88px;height:88px;border-radius:50%;background:var(--ink);color:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}.scoreCircle span{font-size:1.65rem;font-weight:950}.scoreCircle.low{background:var(--ok)}.scoreCircle.med{background:var(--warn)}.scoreCircle.high{background:var(--bad)}
+.tabs{display:flex;gap:8px;overflow-x:auto;position:sticky;top:0;background:var(--bg);z-index:10;padding:8px 0 10px}.tabs button{white-space:nowrap;background:var(--card);color:var(--muted);border:1px solid var(--soft);border-radius:999px;padding:10px 14px}.tabs button.active{background:var(--ink);color:var(--bg)}
+.page{display:none}.page.active{display:block}.card{background:var(--card);border-radius:24px;padding:16px;margin:12px 0;border:1px solid var(--soft);box-shadow:0 8px 22px rgba(40,28,18,.06)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.grid.two{grid-template-columns:1fr 1fr}.stat,.mini,.box{background:var(--bg);border:1px solid var(--soft);border-radius:18px;padding:12px}.stat b,.mini b{display:block;font-size:1.35rem}.stat span,.mini span,.muted{color:var(--muted);font-weight:750}
+label{display:block;color:var(--muted);font-weight:850;margin:12px 0}input,select,textarea{width:100%;padding:12px;border-radius:14px;border:1px solid var(--soft);margin-top:6px;font:inherit;background:var(--bg);color:var(--ink)}textarea{min-height:90px}
 input[type=range]{padding:0;accent-color:var(--accent);border:0}.row{margin:14px 0}.rowTop{display:flex;justify-content:space-between;font-weight:850}.rowTop span:last-child{background:var(--soft);border-radius:999px;padding:3px 10px}
-.entry,.insight,.explain{background:var(--bg);border:1px solid var(--soft);border-radius:16px;padding:12px;margin:8px 0}.entry b,.insight b,.explain b{display:block}
-pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--soft);border-radius:16px;padding:12px;color:var(--ink);overflow:auto}.checks{display:grid;grid-template-columns:1fr 1fr;gap:6px}.checks label{margin:2px 0}.barWrap{background:var(--bg);border:1px solid var(--soft);border-radius:16px;padding:10px;margin:8px 0}.bar{height:12px;background:var(--accent);border-radius:999px;margin-top:6px}.progress{height:12px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:8px}.progress div{height:100%;background:var(--accent);border-radius:999px}.timeline{display:grid;gap:10px}.timelineItem{display:flex;gap:10px;background:var(--bg);border:1px solid var(--soft);border-radius:16px;padding:10px}.timelineTime{min-width:64px;font-weight:950;color:var(--accent)}
-.focusBox{display:grid;grid-template-columns:1fr 1.6fr;gap:12px;align-items:center;background:var(--bg);border:1px solid var(--soft);border-radius:20px;padding:14px}.focusBox b{font-size:3rem;line-height:1}.version{text-align:center;margin-top:16px}
-@media(max-width:650px){.grid,.grid.two,.checks{grid-template-columns:1fr 1fr}.scoreCircle{width:78px;height:78px}h1{font-size:1.3rem}.focusBox{grid-template-columns:1fr}}
+.entry,.insight,.explain{background:var(--bg);border:1px solid var(--soft);border-radius:16px;padding:12px;margin:8px 0}.entry b,.insight b,.explain b{display:block}.checks{display:grid;grid-template-columns:1fr 1fr;gap:6px}.checks label{margin:2px 0}.progress{height:12px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:8px}.progress div{height:100%;background:var(--accent)}
+@media(max-width:650px){.grid,.grid.two,.checks{grid-template-columns:1fr 1fr}.scoreCircle{width:78px;height:78px}}
 </style>
 </head>
 <body>
 <main class="app">
 <header class="top">
-  <div class="brand"><img src="icon.svg" class="logo" alt=""><div><p class="eyebrow">ADHD Health OS</p><h1 id="todayTitle">V4.4</h1></div></div>
-  <button id="exportBtn" class="ghost" type="button">Export</button>
+ <div class="brand"><img src="icon.svg" class="logo" alt=""><div><p class="eyebrow">ADHD Focus OS</p><h1 id="todayTitle">Today</h1></div></div>
+ <button class="ghost" id="exportBtn">Export</button>
 </header>
 
 <section class="hero">
-  <div><p>Forecast</p><h2 id="systemSummary">Ready to log.</h2><p class="muted" id="recommendation">Your recommendation appears here.</p></div>
-  <div class="scoreCircle" id="scoreCircle"><span id="dailyScore">--</span><small>Daily</small></div>
+ <div><p>ADHD Readiness</p><h2 id="summary">Log today to get a useful ADHD picture.</h2><p class="muted" id="recommendation">No medical advice — just tracking and patterns.</p></div>
+ <div class="scoreCircle" id="scoreCircle"><span id="dailyScore">--</span><small>Daily</small></div>
 </section>
 
 <nav class="tabs" id="tabs">
-  <button class="active" type="button" data-page="home">Home</button>
-  <button type="button" data-page="log">Log</button>
-  <button type="button" data-page="focus">Focus</button>
-  <button type="button" data-page="meds">Meds</button>
-  <button type="button" data-page="sleep">Sleep</button>
-  <button type="button" data-page="health">Health</button>
-  <button type="button" data-page="goals">Goals</button>
-  <button type="button" data-page="journal">Journal</button>
-  <button type="button" data-page="insights">Insights</button>
-  <button type="button" data-page="reports">Reports</button>
-  <button type="button" data-page="settings">Settings</button>
+ <button class="active" data-page="home">Home</button><button data-page="log">Log</button><button data-page="meds">Meds</button><button data-page="focus">Focus</button><button data-page="sleep">Sleep</button><button data-page="journal">Journal</button><button data-page="insights">Insights</button><button data-page="settings">Settings</button>
 </nav>
 
 <div id="page-home" class="page active">
-  <div class="grid cards4">
-    <div class="card stat"><b id="dashAdhd">--</b><span>ADHD</span></div>
-    <div class="card stat"><b id="dashSleep">--</b><span>Sleep</span></div>
-    <div class="card stat"><b id="dashMed">--</b><span>Medication</span></div>
-    <div class="card stat"><b id="dashRisk">--</b><span>Risk</span></div>
-  </div>
-  <div class="card"><h2>Overall Score Explained</h2><div id="overallExplain" class="explain"></div><button id="saveEntryBtn" type="button">Save Full Daily Entry</button><button id="resetBtn" type="button" class="secondary">Reset Form</button></div>
-  <div class="card"><h2>Today’s Action Plan</h2><div id="actionPlan"></div></div>
-  <div class="card"><h2>Recent Entries</h2><div id="recentEntries"></div></div>
+ <div class="grid">
+  <div class="card stat"><b id="adhdOut">--</b><span>ADHD</span></div><div class="card stat"><b id="medOut">--</b><span>Meds</span></div><div class="card stat"><b id="sleepOut">--</b><span>Sleep</span></div><div class="card stat"><b id="riskOut">--</b><span>Risk</span></div>
+ </div>
+ <div class="card"><h2>Score explained</h2><div id="scoreExplain" class="explain"></div><button id="saveBtn">Save Daily Entry</button></div>
+ <div class="card"><h2>Today’s ADHD plan</h2><div id="plan"></div></div>
+ <div class="card"><h2>History</h2><div id="history"></div></div>
 </div>
 
 <div id="page-log" class="page">
-  <div class="card"><h2>ADHD Check-in</h2><div id="adhdSliders"></div><div id="adhdExplain" class="explain"></div></div>
-  <div class="card"><h2>Mood & Drive</h2><div id="moodSliders"></div><div id="moodExplain" class="explain"></div></div>
-</div>
-
-<div id="page-focus" class="page">
-  <div class="card">
-    <div class="cardHead"><h2>Focus Coach</h2><span id="focusReadinessPill" class="pill">LIVE</span></div>
-    <div class="focusBox"><div><p class="muted">Focus Readiness</p><b id="focusReadiness">--</b></div><div id="focusRecommendation">This panel is part of the Focus page and should always show.</div></div>
-    <div id="focusExplain" class="explain"></div>
-  </div>
-  <div class="card"><h2>Best Work Window</h2><div id="workWindow"></div></div>
-  <div class="card">
-    <h2>Crash + Hyperfocus</h2>
-    <div class="grid two">
-      <label>Crash start <input id="crashTime" type="time"></label>
-      <label>Recovered at <input id="recoveryTime" type="time"></label>
-      <label>Crash severity / 10 <input id="crashSeverity" type="number" min="0" max="10" value="5"></label>
-      <label>Recovery minutes <input id="recoveryMinutes" type="number"></label>
-      <label>Hyperfocus activity <input id="hyperfocusActivity" placeholder="Phone, work, research"></label>
-      <label>Hyperfocus minutes <input id="hyperfocusMinutes" type="number"></label>
-      <label>Type <select id="hyperfocusType"><option>Productive</option><option>Non-productive</option><option>Mixed</option></select></label>
-      <label>After crash? <select id="hyperfocusAfterCrash"><option>No</option><option>Yes</option></select></label>
-    </div>
-    <div class="grid two">
-      <div class="mini"><b id="avgCrashTimeOut">--</b><span>Average Crash Time</span></div>
-      <div class="mini"><b id="avgCrashSeverityOut">--</b><span>Average Severity</span></div>
-      <div class="mini"><b id="productiveHyperfocusOut">--</b><span>Productive %</span></div>
-      <div class="mini"><b id="mostCommonHyperfocusOut">--</b><span>Most Common</span></div>
-    </div>
-  </div>
-  <div class="card"><h2>Focus Timeline</h2><div id="focusTimeline" class="timeline"></div></div>
+ <div class="card"><h2>ADHD symptoms</h2><div id="adhdSliders"></div><div id="adhdExplain" class="explain"></div></div>
+ <div class="card"><h2>Mood & regulation</h2><div id="moodSliders"></div><div id="moodExplain" class="explain"></div></div>
+ <div class="card"><h2>Body weight</h2><label>Weight <input id="weight" type="number" step="0.1" placeholder="optional"></label><p class="muted">Optional. No body fat or weight-loss features.</p></div>
 </div>
 
 <div id="page-meds" class="page">
-  <div class="card">
-    <h2>Medication</h2>
-    <div class="grid two">
-      <label>Medication <input id="medName" placeholder="Elvanse"></label>
-      <label>Dose <input id="dose" placeholder="50mg"></label>
-      <label>Time taken <input id="medTime" type="time"></label>
-      <label>Missed dose? <select id="missedDose"><option value="no">No</option><option value="yes">Yes</option></select></label>
-      <label>Protein breakfast <select id="protein"><option value="yes">Yes</option><option value="no">No</option></select></label>
-      <label>Caffeine / mg <input id="caffeine" type="number" value="100"></label>
-    </div>
-    <h3>Side effects</h3>
-    <div class="checks">
-      <label><input type="checkbox" class="side" value="Appetite suppression"> Appetite suppression</label>
-      <label><input type="checkbox" class="side" value="Headache"> Headache</label>
-      <label><input type="checkbox" class="side" value="Anxiety"> Anxiety</label>
-      <label><input type="checkbox" class="side" value="Elevated heart rate"> Elevated heart rate</label>
-      <label><input type="checkbox" class="side" value="Irritability"> Irritability</label>
-      <label><input type="checkbox" class="side" value="Sleep issues"> Sleep issues</label>
-    </div>
-    <div class="grid two">
-      <div class="mini"><b id="medEffectiveness">--</b><span>Effectiveness</span></div>
-      <div class="mini"><b id="adherenceOut">--</b><span>30-day adherence</span></div>
-      <div class="mini"><b id="medCrashRisk">--</b><span>Crash Risk</span></div>
-      <div class="mini"><b id="bestDoseOut">--</b><span>Best Dose</span></div>
-    </div>
-    <div id="medExplain" class="explain"></div>
+ <div class="card">
+  <h2>Medication tracking</h2>
+  <div class="grid two">
+   <label>Medication <input id="medName" placeholder="Elvanse"></label><label>Dose <input id="dose" placeholder="50mg"></label>
+   <label>Time taken <input id="medTime" type="time"></label><label>Missed dose?<select id="missedDose"><option value="no">No</option><option value="yes">Yes</option></select></label>
+   <label>Protein breakfast?<select id="protein"><option value="yes">Yes</option><option value="no">No</option></select></label><label>Caffeine / mg <input id="caffeine" type="number" value="100"></label>
+   <label>Crash time <input id="crashTime" type="time"></label><label>Crash severity /10 <input id="crashSeverity" type="number" min="0" max="10" value="5"></label>
   </div>
+  <h2>Side effects</h2>
+  <div class="checks">
+   <label><input type="checkbox" class="side" value="Appetite suppression"> Appetite suppression</label><label><input type="checkbox" class="side" value="Headache"> Headache</label><label><input type="checkbox" class="side" value="Anxiety"> Anxiety</label><label><input type="checkbox" class="side" value="Irritability"> Irritability</label><label><input type="checkbox" class="side" value="Sleep affected"> Sleep affected</label><label><input type="checkbox" class="side" value="Heart rate noticeable"> Heart rate noticeable</label>
+  </div>
+  <div id="medExplain" class="explain"></div>
+ </div>
+</div>
+
+<div id="page-focus" class="page">
+ <div class="card"><h2>Focus readiness</h2><div class="grid two"><div class="mini"><b id="focusReady">--</b><span>Readiness</span></div><div class="mini"><b id="bestWindow">--</b><span>Best work window</span></div></div><div id="focusExplain" class="explain"></div></div>
+ <div class="card"><h2>Hyperfocus / distraction</h2><div class="grid two"><label>Activity <input id="hyperActivity" placeholder="Phone, work, gaming..."></label><label>Minutes <input id="hyperMinutes" type="number"></label><label>Type<select id="hyperType"><option>Productive</option><option>Non-productive</option><option>Mixed</option></select></label></div></div>
 </div>
 
 <div id="page-sleep" class="page">
-  <div class="card">
-    <h2>Sleep</h2>
-    <p class="muted">Total sleep is calculated automatically from Bedtime to Wake time.</p>
-    <div class="grid two">
-      <label>Bedtime <input id="bedtime" type="time"></label>
-      <label>Wake time <input id="wakeTime" type="time"></label>
-      <label>Night wakings <input id="wakings" type="number" min="0" value="1"></label>
-    </div>
-    <label>Sleep quality / 10 <input id="quality" type="range" min="0" max="10" value="8"></label>
-    <p class="muted">Quality: <span id="qualityVal">8</span>/10</p>
-    <div class="grid two">
-      <div class="mini"><b id="durationOut">8h</b><span>Total Sleep</span></div>
-      <div class="mini"><b id="sleepScore">--</b><span>Sleep Score</span></div>
-      <div class="mini"><b id="sleepDebtOut">--</b><span>Sleep Debt</span></div>
-      <div class="mini"><b id="sleepRiskOut">--</b><span>Recovery Risk</span></div>
-    </div>
-    <div id="sleepExplain" class="explain"></div>
-  </div>
-</div>
-
-<div id="page-health" class="page">
-  <div class="card">
-    <h2>Health + Weight</h2>
-    <div class="grid two">
-      <label>Weight <input id="weight" type="number" step="0.1"></label>
-      <label>Goal weight <input id="goalWeight" type="number" step="0.1"></label>
-      <label>Steps <input id="steps" type="number"></label>
-      <label>Water / litres <input id="water" type="number" step="0.1"></label>
-      <label>Protein / grams <input id="proteinGrams" type="number"></label>
-      <label>Gym session? <select id="gym"><option value="no">No</option><option value="yes">Yes</option></select></label>
-    </div>
-    <div class="grid two">
-      <div class="mini"><b id="healthScore">--</b><span>Health Score</span></div>
-      <div class="mini"><b id="weightTrend">--</b><span>Weight Trend</span></div>
-      <div class="mini"><b id="weeklyLossOut">--</b><span>Weekly Rate</span></div>
-      <div class="mini"><b id="goalEtaOut">--</b><span>Goal ETA</span></div>
-    </div>
-    <div id="healthExplain" class="explain"></div>
-  </div>
-</div>
-
-<div id="page-goals" class="page">
-  <div class="card">
-    <h2>Goals</h2>
-    <div class="grid two">
-      <label>ADHD target <input id="goalAdhd" type="number" value="75"></label>
-      <label>Sleep target / h <input id="goalSleep" type="number" value="8"></label>
-      <label>Protein target / g <input id="goalProtein" type="number" value="180"></label>
-      <label>Steps target <input id="goalSteps" type="number" value="8000"></label>
-    </div>
-    <div id="goalProgress"></div>
-  </div>
+ <div class="card"><h2>Sleep</h2><p class="muted">Sleep duration is automatic from bedtime to wake time.</p><div class="grid two"><label>Bedtime <input id="bedtime" type="time"></label><label>Wake time <input id="wakeTime" type="time"></label><label>Night wakings <input id="wakings" type="number" value="1"></label></div><label>Sleep quality /10 <input id="quality" type="range" min="0" max="10" value="8"></label><p class="muted">Quality: <span id="qualityVal">8</span>/10</p><div class="grid two"><div class="mini"><b id="durationOut">8h</b><span>Duration</span></div><div class="mini"><b id="sleepScoreOut">--</b><span>Sleep score</span></div></div><div id="sleepExplain" class="explain"></div></div>
 </div>
 
 <div id="page-journal" class="page">
-  <div class="card"><h2>ADHD Journal</h2><label>Win <input id="journalWin"></label><label>Struggle <input id="journalStruggle"></label><label>Observation <input id="journalObservation"></label><label>Search <input id="journalSearch"></label><div id="journalResults"></div></div>
+ <div class="card"><h2>ADHD journal</h2><label>Wins <textarea id="wins"></textarea></label><label>Struggles <textarea id="struggles"></textarea></label><label>Notes for clinician <textarea id="notes"></textarea></label></div>
 </div>
 
 <div id="page-insights" class="page">
-  <div class="card"><h2>Pattern Engine</h2><div id="insightList"></div></div>
-  <div class="card"><h2>Weekly Review</h2><pre id="weeklyReview"></pre></div>
-  <div class="card"><h2>Trends</h2><div id="chartArea"></div></div>
-</div>
-
-<div id="page-reports" class="page">
-  <div class="card"><h2>Reports</h2><button id="generateReportBtn" type="button">Generate Clinician Report</button><button id="downloadReportBtn" type="button">Download Report</button><pre id="reportText"></pre></div>
+ <div class="card"><h2>Patterns</h2><div id="insights"></div></div>
+ <div class="card"><h2>Clinician report</h2><button id="reportBtn">Generate report</button><pre id="report"></pre></div>
 </div>
 
 <div id="page-settings" class="page">
-  <div class="card">
-    <h2>Settings</h2>
-    <label>Theme <select id="theme"><option value="light">Light</option><option value="dark">Dark</option><option value="amoled">AMOLED</option></select></label>
-    <label>Colour <select id="scheme"><option value="copper">Copper</option><option value="ocean">Ocean</option><option value="forest">Forest</option><option value="plum">Plum</option></select></label>
-    <button id="saveSettingsBtn" type="button">Save Settings</button>
-    <button id="exportJsonBtn" type="button">Export JSON Backup</button>
-    <input id="importFile" type="file" accept=".json">
-    <button id="importBtn" type="button">Import Backup</button>
-    <button id="clearBtn" class="danger" type="button">Clear All Data</button>
-    <p class="muted version">V4.4 · Focus page rebuilt using page panels</p>
-  </div>
+ <div class="card"><h2>Settings</h2><label>Theme<select id="theme"><option value="light">Light</option><option value="dark">Dark</option><option value="amoled">AMOLED</option></select></label><button id="saveSettingsBtn">Save settings</button><button id="importBtn">Import backup</button><input id="importFile" type="file" accept=".json"><button class="danger" id="clearBtn">Clear all data</button></div>
 </div>
 </main>
 
 <script>
-(function(){
 const $=id=>document.getElementById(id);
-const storeKey='adhdHealthOSV44';
-let db=JSON.parse(localStorage.getItem(storeKey)||'{"entries":[],"settings":{"theme":"light","scheme":"copper"}}');
-const adhdMetrics=[['focus','Focus',25,false],['initiation','Task initiation',20,false],['switching','Task switching',15,false],['emotional','Emotional regulation',15,false],['noise','Mental noise',15,true],['irritability','Irritability',10,true]];
-const moodMetrics=[['mood','Mood'],['motivation','Motivation'],['anxiety','Anxiety'],['irritMood','Irritability']];
-let vals={focus:5,initiation:5,switching:5,emotional:5,noise:5,irritability:5,mood:5,motivation:5,anxiety:5,irritMood:5};
-function set(id,v){let e=$(id); if(e)e.textContent=v}
-function html(id,v){let e=$(id); if(e)e.innerHTML=v}
-function value(id,d=0){let e=$(id); let n=e?Number(e.value):d; return Number.isFinite(n)?n:d}
-function text(id){let e=$(id); return e?e.value:''}
-function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
-function avg(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:null}
-function mins(t){if(!t)return null;let p=t.split(':').map(Number);return p[0]*60+p[1]}
-function fmt(m){if(m==null||Number.isNaN(m))return'--';m=Math.round(m)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}
-function diff(a,b){let x=mins(a),y=mins(b);if(x==null||y==null)return null;if(y<x)y+=1440;return y-x}
-function save(){localStorage.setItem(storeKey,JSON.stringify(db));render()}
-function buildSliders(list,wrapId){let wrap=$(wrapId); if(!wrap)return; wrap.innerHTML=''; list.forEach(m=>{let row=document.createElement('div'); row.className='row'; row.innerHTML='<div class="rowTop"><span>'+m[1]+'</span><span id="'+m[0]+'Val">'+vals[m[0]]+'</span></div><input id="'+m[0]+'" type="range" min="0" max="10" value="'+vals[m[0]]+'">'; wrap.appendChild(row); $(m[0]).addEventListener('input',e=>{vals[m[0]]=Number(e.target.value);set(m[0]+'Val',vals[m[0]]);render()})})}
-function applySettings(){document.body.className=''; if(db.settings.theme==='dark')document.body.classList.add('dark'); if(db.settings.theme==='amoled')document.body.classList.add('amoled'); if(db.settings.scheme&&db.settings.scheme!=='copper')document.body.classList.add(db.settings.scheme); if($('theme'))$('theme').value=db.settings.theme||'light'; if($('scheme'))$('scheme').value=db.settings.scheme||'copper'}
-function adhd(){let w=0; adhdMetrics.forEach(m=>w+=(m[3]?10-vals[m[0]]:vals[m[0]])*m[2]); let score=Math.round(w/10); let exec=Math.round((vals.focus+vals.initiation+vals.switching+vals.emotional)/40*100); let symptom=Math.round(((10-vals.noise)+(10-vals.irritability))/20*100); return {score,exec,symptom}}
-function sleep(){let dur=diff(text('bedtime'),text('wakeTime')); dur=dur==null?8:dur/60; let quality=value('quality',8), wakings=value('wakings',1); let ds=dur<=8?(dur/8)*50:50; let q=(quality/10)*40; let w=Math.max(0,10-wakings*2); let score=Math.round(clamp(ds+q+w,0,100)); let risk=score>=75?'LOW':score>=60?'MEDIUM':'HIGH'; return {score,duration:Number(dur.toFixed(1)),debt:Number(Math.max(0,8-dur).toFixed(1)),risk,durationScore:Math.round(ds),qualityScore:Math.round(q),wakingScore:Math.round(w)}}
-function med(a,s){let crash=clamp(value('crashSeverity',5),0,10), caffeine=value('caffeine',100), protein=text('protein')==='yes', missed=text('missedDose')==='yes'; let proteinBonus=protein?5:-3; let caffeinePenalty=caffeine>300?10:caffeine>150?5:0; let crashPenalty=crash*3; let score=Math.round(clamp(a.score*.7+(s.score-50)*.2-crashPenalty+proteinBonus-caffeinePenalty-(missed?25:0)+20,0,100)); let risk=score>=75&&crash<=3?'LOW':score>=60&&crash<=6?'MEDIUM':'HIGH'; return {score,risk,missed,crashPenalty,proteinBonus,caffeinePenalty}}
-function mood(){return {score:Math.round((vals.mood+vals.motivation+(10-vals.anxiety)+(10-vals.irritMood))/40*100)}}
-function health(s){let points=50, reasons=[]; if(s.score>=75){points+=20;reasons.push('+20 good sleep')}else if(s.score<60){points-=10;reasons.push('-10 poor sleep')} if(value('steps')>=value('goalSteps',8000)){points+=10;reasons.push('+10 steps target')} if(text('gym')==='yes'){points+=10;reasons.push('+10 gym')} if(value('water')>=2){points+=5;reasons.push('+5 hydration')} return {score:clamp(Math.round(points),0,100),reasons}}
-function current(){let a=adhd(),s=sleep(),m=med(a,s),mo=mood(),h=health(s); let daily=Math.round(a.score*.35+s.score*.2+m.score*.25+mo.score*.1+h.score*.1); let risk=s.score<60||m.risk==='HIGH'||value('crashSeverity',5)>=7?'HIGH':s.score<75||m.risk==='MEDIUM'?'MEDIUM':'LOW'; return {date:new Date().toISOString(),adhd:a,sleep:s,med:m,mood:mo,health:h,dailyScore:daily,risk,values:{...vals},medName:text('medName'),dose:text('dose'),medTime:text('medTime'),caffeine:value('caffeine',100),proteinBreakfast:text('protein')==='yes',crash:{time:text('crashTime'),severity:value('crashSeverity',5),duration:diff(text('crashTime'),text('recoveryTime'))||value('recoveryMinutes')},hyperfocus:{activity:text('hyperfocusActivity'),minutes:value('hyperfocusMinutes'),type:text('hyperfocusType')},journal:{win:text('journalWin'),struggle:text('journalStruggle'),observation:text('journalObservation')}}}
-function adherence(){let es=db.entries.slice(-30); return es.length?Math.round(es.filter(e=>!e.med.missed).length/es.length*100)+'%':'--'}
-function avgCrashTime(){let t=db.entries.filter(e=>e.crash&&e.crash.time).map(e=>mins(e.crash.time)); return t.length?fmt(avg(t)):'--'}
-function avgCrashSeverity(){let v=db.entries.filter(e=>e.crash&&e.crash.severity).map(e=>e.crash.severity); return v.length?avg(v).toFixed(1)+'/10':'--'}
-function commonActivity(){let c={}; db.entries.forEach(e=>{let a=e.hyperfocus&&e.hyperfocus.activity;if(a)c[a]=(c[a]||0)+1}); let s=Object.entries(c).sort((a,b)=>b[1]-a[1]); return s.length?s[0][0]:'--'}
-function coach(e){let out=[]; if(e.sleep.score<60)out.push('Sleep is limiting focus. Keep important work early and light.'); if(e.med.risk==='HIGH')out.push('Crash risk is high. Prioritise food, hydration and avoid extra caffeine.'); if(e.adhd.exec<60)out.push('Executive function is low. Use 5-minute task starts.'); if(!out.length)out.push('Good readiness. Use the morning/early afternoon for high-value tasks.'); return out}
-function insights(){let out=[]; if(db.entries.length<3)out.push('Need 3+ entries for stronger pattern insights.'); if(db.entries.some(e=>e.crash.time))out.push('Average crash time is '+avgCrashTime()+'.'); return out}
-function weekly(){let es=db.entries.slice(-7); if(!es.length)return'No weekly data yet.'; return 'Entries: '+es.length+'\\nADHD avg: '+avg(es.map(e=>e.adhd.score)).toFixed(1)+'\\nSleep avg: '+avg(es.map(e=>e.sleep.score)).toFixed(1)+'\\nMedication avg: '+avg(es.map(e=>e.med.score)).toFixed(1)+'%'}
-function report(){return 'ADHD HEALTH OS V4.4 REPORT\\n\\nEntries: '+db.entries.length+'\\nAdherence: '+adherence()+'\\nAverage crash time: '+avgCrashTime()+'\\n\\n'+weekly()}
-function bar(label,vals){return '<div class="barWrap"><b>'+label+'</b>'+(vals.length?vals.slice(-10).map(v=>'<div class="bar" style="width:'+Math.max(3,Math.min(100,v))+'%"></div>').join(''):'<p class="muted">No data yet</p>')+'</div>'}
-function goals(){let e=current(); return [['ADHD',e.adhd.score,value('goalAdhd',75)],['Sleep',e.sleep.duration,value('goalSleep',8)],['Protein',value('proteinGrams'),value('goalProtein',180)],['Steps',value('steps'),value('goalSteps',8000)]]}
-function showPage(name){document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.page===name));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));let page=$('page-'+name);if(page)page.classList.add('active');window.scrollTo(0,0);}
-function render(){let e=current(); 
-set('dashAdhd',e.adhd.score+'/100'); set('dashSleep',e.sleep.score+'/100'); set('dashMed',e.med.score+'%'); set('dashRisk',e.risk); set('dailyScore',e.dailyScore); set('systemSummary',e.risk+' risk · daily '+e.dailyScore+'/100'); set('recommendation',coach(e)[0]); $('scoreCircle').className='scoreCircle '+(e.risk==='HIGH'?'high':e.risk==='MEDIUM'?'med':'low');
-set('qualityVal',text('quality')||8); set('medEffectiveness',e.med.score+'%'); set('adherenceOut',adherence()); set('medCrashRisk',e.med.risk); set('bestDoseOut','tracking'); set('durationOut',e.sleep.duration+'h'); set('sleepScore',e.sleep.score+'/100'); set('sleepDebtOut',e.sleep.debt+'h'); set('sleepRiskOut',e.sleep.risk); set('healthScore',e.health.score+'/100'); set('weightTrend','tracking'); set('weeklyLossOut','tracking'); set('goalEtaOut','--'); set('avgCrashTimeOut',avgCrashTime()); set('avgCrashSeverityOut',avgCrashSeverity()); set('productiveHyperfocusOut',db.entries.length?'tracking':'--'); set('mostCommonHyperfocusOut',commonActivity());
-let fr=Math.round(e.adhd.exec*.4+e.sleep.score*.25+e.med.score*.25+e.mood.score*.1); set('focusReadiness',fr+'/100'); set('focusReadinessPill',fr>=80?'READY':fr>=60?'OK':fr>=40?'FRAGILE':'LOW'); set('focusRecommendation',coach(e).join(' ')); html('workWindow','<div class="insight"><b>Suggested window</b>Morning to '+(avgCrashTime()==='--'?'early afternoon':avgCrashTime())+' for hardest tasks.</div>'); html('focusTimeline','<div class="timelineItem"><div class="timelineTime">'+(e.medTime||'--')+'</div><div>Medication window</div></div><div class="timelineItem"><div class="timelineTime">'+avgCrashTime()+'</div><div>Predicted crash window</div></div>');
-html('overallExplain','<b>Daily score '+e.dailyScore+'/100</b>Built from ADHD 35%, medication 25%, sleep 20%, mood 10%, and health 10%. Risk is raised when sleep is low, medication crash risk is high, or crash severity is 7+.');
-html('adhdExplain','<b>ADHD score '+e.adhd.score+'/100</b>Focus, task initiation, switching and emotional regulation increase the score. Mental noise and irritability reduce it. Executive function: '+e.adhd.exec+'/100. Symptom control: '+e.adhd.symptom+'/100.');
-html('moodExplain','<b>Mood score '+e.mood.score+'/100</b>Mood and motivation increase the score. Anxiety and irritability reduce it.');
-html('sleepExplain','<b>Sleep score '+e.sleep.score+'/100</b>Duration gives up to 50 points, quality up to 40, and night wakings up to 10. Current breakdown: duration '+e.sleep.durationScore+'/50, quality '+e.sleep.qualityScore+'/40, wakings '+e.sleep.wakingScore+'/10.');
-html('medExplain','<b>Medication score '+e.med.score+'%</b>Uses ADHD score, sleep score, crash severity, protein breakfast and caffeine. Crash penalty: -'+e.med.crashPenalty+'. Protein impact: '+e.med.proteinBonus+'. Caffeine penalty: -'+e.med.caffeinePenalty+'.');
-html('healthExplain','<b>Health score '+e.health.score+'/100</b>Starts from 50 and adjusts for sleep, steps, gym, and hydration. '+(e.health.reasons.length?e.health.reasons.join(', '):'No health bonuses logged yet.'));
-html('focusExplain','<b>Focus readiness '+fr+'/100</b>Based on executive function, ADHD score, sleep, medication effectiveness and mood. This is separate from the overall daily score.');
-html('actionPlan',coach(e).map(x=>'<div class="insight">'+x+'</div>').join('')); html('recentEntries',db.entries.slice(-5).reverse().map(x=>'<div class="entry"><b>'+new Date(x.date).toLocaleString('en-GB')+' · '+x.dailyScore+'/100</b>ADHD '+x.adhd.score+' · Sleep '+x.sleep.score+' · Med '+x.med.score+'%</div>').join('')||'<p class="muted">No entries yet.</p>'); html('insightList',insights().map(x=>'<div class="insight">'+x+'</div>').join('')); set('weeklyReview',weekly()); html('chartArea',bar('Daily',db.entries.map(x=>x.dailyScore))+bar('ADHD',db.entries.map(x=>x.adhd.score))); html('goalProgress',goals().map(g=>'<div class="barWrap"><b>'+g[0]+': '+g[1]+' / '+g[2]+'</b><div class="progress"><div style="width:'+clamp(g[1]/g[2]*100,0,100)+'%"></div></div></div>').join('')); html('journalResults','<p class="muted">Journal entries save with daily entry.</p>')}
-function init(){set('todayTitle',new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})); buildSliders(adhdMetrics,'adhdSliders'); buildSliders(moodMetrics,'moodSliders'); applySettings(); document.querySelectorAll('input,select').forEach(el=>{el.addEventListener('input',render);el.addEventListener('change',render)}); $('tabs').addEventListener('click',e=>{let b=e.target.closest('button[data-page]'); if(!b)return; showPage(b.dataset.page)}); $('saveEntryBtn').onclick=()=>{db.entries.push(current());save();alert('Entry saved')}; $('resetBtn').onclick=()=>location.reload(); $('generateReportBtn').onclick=()=>set('reportText',report()); $('downloadReportBtn').onclick=()=>{let blob=new Blob([report()],{type:'text/plain'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-health-report.txt';a.click()}; $('exportBtn').onclick=$('exportJsonBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-health-os-v44-backup.json';a.click()}; $('importBtn').onclick=()=>{let f=$('importFile').files[0]; if(!f)return alert('Choose backup first'); let r=new FileReader(); r.onload=e=>{db=JSON.parse(e.target.result);save();alert('Imported')}; r.readAsText(f)}; $('saveSettingsBtn').onclick=()=>{db.settings={theme:text('theme'),scheme:text('scheme')};save();alert('Settings saved')}; $('clearBtn').onclick=()=>{if(confirm('Clear all data?')){db={entries:[],settings:{theme:'light',scheme:'copper'}};save();location.reload()}}; render()}
+const KEY='adhdFocusOSv1';
+let db=JSON.parse(localStorage.getItem(KEY)||'{"entries":[],"settings":{"theme":"light"}}');
+let vals={focus:5,initiation:5,switching:5,noise:5,impulsivity:5,regulation:5,mood:5,motivation:5,anxiety:5,irritability:5};
+const adhd=[['focus','Focus',25,false],['initiation','Task initiation',20,false],['switching','Task switching',15,false],['regulation','Emotional regulation',15,false],['noise','Mental noise',15,true],['impulsivity','Impulsivity',10,true]];
+const mood=[['mood','Mood'],['motivation','Motivation'],['anxiety','Anxiety'],['irritability','Irritability']];
+function n(id,d=0){let e=$(id);let v=e?Number(e.value):d;return Number.isFinite(v)?v:d} function s(id){let e=$(id);return e?e.value:''} function set(id,v){let e=$(id);if(e)e.textContent=v} function html(id,v){let e=$(id);if(e)e.innerHTML=v} function clamp(x,a,b){return Math.max(a,Math.min(b,x))} function avg(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:null}
+function minutes(t){if(!t)return null;let p=t.split(':').map(Number);return p[0]*60+p[1]} function diff(a,b){let x=minutes(a),y=minutes(b);if(x==null||y==null)return null;if(y<x)y+=1440;return y-x}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
+function sliders(list,wrap){let w=$(wrap);w.innerHTML='';list.forEach(m=>{let r=document.createElement('div');r.className='row';r.innerHTML='<div class="rowTop"><span>'+m[1]+'</span><span id="'+m[0]+'Val">'+vals[m[0]]+'</span></div><input id="'+m[0]+'" type="range" min="0" max="10" value="'+vals[m[0]]+'">';w.appendChild(r);$(m[0]).oninput=e=>{vals[m[0]]=Number(e.target.value);set(m[0]+'Val',vals[m[0]]);render()}})}
+function calcADHD(){let total=0;adhd.forEach(m=>total+=(m[3]?10-vals[m[0]]:vals[m[0]])*m[2]);let score=Math.round(total/10);let exec=Math.round((vals.focus+vals.initiation+vals.switching+vals.regulation)/40*100);return{score,exec}}
+function calcMood(){return Math.round((vals.mood+vals.motivation+(10-vals.anxiety)+(10-vals.irritability))/40*100)}
+function calcSleep(){let dur=diff(s('bedtime'),s('wakeTime'));dur=dur==null?8:dur/60;let q=n('quality',8),w=n('wakings',1);let score=Math.round(clamp((dur<=8?dur/8*50:50)+(q/10*40)+Math.max(0,10-w*2),0,100));return{duration:Number(dur.toFixed(1)),score,debt:Number(Math.max(0,8-dur).toFixed(1))}}
+function calcMed(a,sl){let crash=n('crashSeverity',5), caffeine=n('caffeine',100), missed=s('missedDose')==='yes', protein=s('protein')==='yes';let score=Math.round(clamp(a.score*.65+(sl.score-50)*.2-crash*3+(protein?5:-3)-(caffeine>300?10:caffeine>150?5:0)-(missed?25:0)+20,0,100));let risk=score>=75&&crash<=3?'LOW':score>=60&&crash<=6?'MEDIUM':'HIGH';return{score,risk}}
+function current(){let a=calcADHD(), sl=calcSleep(), m=calcMed(a,sl), mo=calcMood();let daily=Math.round(a.score*.4+m.score*.25+sl.score*.2+mo*.15);let risk=sl.score<60||m.risk==='HIGH'||n('crashSeverity',5)>=7?'HIGH':sl.score<75||m.risk==='MEDIUM'?'MEDIUM':'LOW';return{date:new Date().toISOString(),vals:{...vals},adhd:a,sleep:sl,med:m,mood:mo,daily,risk,weight:n('weight',0),medName:s('medName'),dose:s('dose'),medTime:s('medTime'),crashTime:s('crashTime'),crashSeverity:n('crashSeverity',5),caffeine:n('caffeine',100),sideEffects:[...document.querySelectorAll('.side:checked')].map(x=>x.value),journal:{wins:s('wins'),struggles:s('struggles'),notes:s('notes')}}}
+function plan(e){let p=[];if(e.risk==='HIGH')p.push('High risk day: keep tasks small, eat properly, hydrate, and avoid extra caffeine.');if(e.adhd.exec<60)p.push('Executive function is low: use 5-minute starts and write the next action down.');if(e.sleep.score<70)p.push('Sleep is dragging the score down: expect lower capacity later.');if(!p.length)p.push('Good readiness: use the earlier part of the day for the hardest tasks.');return p}
+function render(){let e=current();set('dailyScore',e.daily);set('summary',e.risk+' risk · daily '+e.daily+'/100');set('recommendation',plan(e)[0]);$('scoreCircle').className='scoreCircle '+(e.risk==='HIGH'?'high':e.risk==='MEDIUM'?'med':'low');set('adhdOut',e.adhd.score+'/100');set('medOut',e.med.score+'%');set('sleepOut',e.sleep.score+'/100');set('riskOut',e.risk);set('qualityVal',s('quality')||8);set('durationOut',e.sleep.duration+'h');set('sleepScoreOut',e.sleep.score+'/100');set('focusReady',Math.round(e.adhd.exec*.45+e.med.score*.25+e.sleep.score*.2+e.mood*.1)+'/100');set('bestWindow',e.medTime?e.medTime+'–13:30':'Morning');
+html('scoreExplain','<b>Daily score '+e.daily+'/100</b>ADHD symptoms 40%, medication effectiveness 25%, sleep 20%, mood/regulation 15%. Risk becomes high if crash risk, sleep, or crash severity are poor.');
+html('adhdExplain','<b>ADHD score '+e.adhd.score+'/100</b>Higher focus, task initiation, switching and regulation increase it. Mental noise and impulsivity reduce it. Executive function: '+e.adhd.exec+'/100.');
+html('moodExplain','<b>Mood score '+e.mood+'/100</b>Mood and motivation raise it. Anxiety and irritability lower it.');
+html('medExplain','<b>Medication score '+e.med.score+'%</b>Uses ADHD score, sleep, crash severity, protein breakfast, caffeine and missed dose status. Crash risk: '+e.med.risk+'.');
+html('sleepExplain','<b>Sleep score '+e.sleep.score+'/100</b>Duration up to 50 points, quality up to 40, night wakings up to 10. Sleep debt: '+e.sleep.debt+'h.');
+html('focusExplain','<b>Focus readiness</b>Uses executive function, medication score, sleep score and mood. This is for work capacity, not diagnosis.');
+html('plan',plan(e).map(x=>'<div class="insight">'+x+'</div>').join(''));
+html('history',db.entries.slice(-5).reverse().map(x=>'<div class="entry"><b>'+new Date(x.date).toLocaleString('en-GB')+' · '+x.daily+'/100</b>ADHD '+x.adhd.score+' · Med '+x.med.score+' · Sleep '+x.sleep.score+'</div>').join('')||'<p class="muted">No entries yet.</p>');
+html('insights',patterns());}
+function patterns(){if(db.entries.length<3)return'<div class="insight">Save at least 3 entries to start seeing patterns.</div>';let crash=db.entries.filter(e=>e.crashTime);let out=[];if(crash.length)out.push('Average crash severity: '+avg(crash.map(e=>e.crashSeverity)).toFixed(1)+'/10');out.push('Average ADHD score: '+avg(db.entries.map(e=>e.adhd.score)).toFixed(1)+'/100');return out.map(x=>'<div class="insight">'+x+'</div>').join('')}
+function report(){let es=db.entries;return 'ADHD FOCUS OS REPORT\\n\\nEntries: '+es.length+'\\nAverage ADHD: '+(es.length?avg(es.map(e=>e.adhd.score)).toFixed(1):'--')+'\\nAverage Medication: '+(es.length?avg(es.map(e=>e.med.score)).toFixed(1):'--')+'\\nAverage Sleep: '+(es.length?avg(es.map(e=>e.sleep.score)).toFixed(1):'--')+'\\n\\nRecent notes included in saved entries.'}
+function show(page){document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$('page-'+page).classList.add('active');scrollTo(0,0)}
+function init(){set('todayTitle',new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}));sliders(adhd,'adhdSliders');sliders(mood,'moodSliders');if(db.settings.theme)document.body.classList.add(db.settings.theme);document.querySelectorAll('input,select,textarea').forEach(el=>{el.addEventListener('input',render);el.addEventListener('change',render)});$('tabs').onclick=e=>{let b=e.target.closest('[data-page]');if(b)show(b.dataset.page)};$('saveBtn').onclick=()=>{db.entries.push(current());save();alert('Entry saved')};$('reportBtn').onclick=()=>html('report',report());$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adhd-focus-os-backup.json';a.click()};$('exportJsonBtn').onclick=$('exportBtn').onclick;$('saveSettingsBtn').onclick=()=>{db.settings.theme=s('theme');localStorage.setItem(KEY,JSON.stringify(db));location.reload()};$('clearBtn').onclick=()=>{if(confirm('Clear all data?')){localStorage.removeItem(KEY);location.reload()}};render()}
 init();
-})();
 </script>
 </body>
 </html>
